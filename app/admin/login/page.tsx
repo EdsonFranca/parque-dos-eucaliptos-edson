@@ -1,101 +1,114 @@
 'use client';
-
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { supabase } from '@/lib/supabase';
+import { Lock, User, ArrowRight, Eye, EyeOff, Loader2 } from 'lucide-react';
 
 export default function LoginAdmin() {
+  const [email, setEmail] = useState('');
   const [senha, setSenha] = useState('');
-  const [novaSenha, setNovaSenha] = useState('');
-  const [confirmarSenha, setConfirmarSenha] = useState('');
-  const [primeiroAcesso, setPrimeiroAcesso] = useState(false);
   const [verSenha, setVerSenha] = useState(false);
-  const router = useRouter();
+  const [erro, setErro] = useState('');
+  const [carregando, setCarregando] = useState(false);
 
-  // Garante a senha inicial padrão
-  useEffect(() => {
-    if (!localStorage.getItem('senha_admin')) {
-      localStorage.setItem('senha_admin', 'admin123');
-    }
-  }, []);
-
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    const senhaSalva = localStorage.getItem('senha_admin') || 'admin123';
+    setErro('');
+    setCarregando(true);
+    console.log("1. Iniciei a função");
 
-    if (!primeiroAcesso) {
-      if (senha === senhaSalva) {
-        if (senhaSalva === 'admin123') {
-          setPrimeiroAcesso(true);
-        } else {
-          router.push('/admin/dashboard');
-        }
-      } else {
-        alert("Senha administrativa incorreta!");
-      }
-    } else {
-      if (novaSenha !== confirmarSenha) {
-        return alert("As senhas não coincidem!");
-      }
-      if (novaSenha.length < 4) {
-        return alert("A nova senha deve ter pelo menos 4 caracteres.");
+    try {
+        console.log("2. Tentando acessar o objeto supabase...");
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: email.trim(),
+        password: senha,
+      });
+console.log("3. Supabase respondeu!");
+      if (error) {
+        setErro("E-mail ou senha incorretos.");
+        setCarregando(false);
+        return;
       }
 
-      localStorage.setItem('senha_admin', novaSenha);
-      alert("Senha alterada com sucesso!");
-      router.push('/admin/dashboard');
+      if (data?.session) {
+        // Redirecionamento único e definitivo
+        window.location.href = '/admin/dashboard';
+      }
+    } catch (err) {
+      setErro("Erro interno no sistema.");
+      setCarregando(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-slate-900 flex items-center justify-center p-4 text-black" translate="no">
-      <form onSubmit={handleLogin} className="bg-white p-8 rounded-3xl shadow-2xl w-full max-w-sm border-t-8 border-blue-600 relative">
-        <h1 className="text-xl font-black text-center mb-6 uppercase italic tracking-tighter text-blue-900">Painel Síndico 🔑</h1>
+    <div className="min-h-screen bg-[#9ea392] flex items-center justify-center p-6 font-sans">
+      <div className="w-full max-w-[400px] bg-[#eef0e5] rounded-[3rem] p-10 shadow-sm relative overflow-hidden">
 
-        <div className="space-y-4 mb-6">
-          {!primeiroAcesso ? (
-            /* LOGIN NORMAL */
-            <div className="relative">
-              <input
-                type={verSenha ? "text" : "password"}
-                placeholder="Senha de Acesso"
-                className="w-full p-4 border-2 border-gray-100 rounded-2xl outline-none focus:border-blue-600 font-bold"
-                value={senha} onChange={(e) => setSenha(e.target.value)}
-                required
-              />
-              <button type="button" onClick={() => setVerSenha(!verSenha)} className="absolute right-4 top-1/2 -translate-y-1/2 opacity-30 text-xl">
-                {verSenha ? '👁️' : '🙈'}
-              </button>
-            </div>
-          ) : (
-            /* TROCA DE SENHA */
-            <div className="space-y-4">
-              <p className="text-[10px] font-black text-orange-600 uppercase text-center">Defina sua senha definitiva:</p>
-              <input
-                type={verSenha ? "text" : "password"}
-                placeholder="Nova Senha"
-                className="w-full p-4 border-2 border-orange-200 rounded-2xl outline-none focus:border-blue-600 font-bold"
-                value={novaSenha} onChange={(e) => setNovaSenha(e.target.value)}
-                required
-              />
-              <input
-                type={verSenha ? "text" : "password"}
-                placeholder="Confirme a Nova Senha"
-                className="w-full p-4 border-2 border-orange-200 rounded-2xl outline-none focus:border-blue-600 font-bold"
-                value={confirmarSenha} onChange={(e) => setConfirmarSenha(e.target.value)}
-                required
-              />
-            </div>
-          )}
+        <div className="flex justify-center mb-8">
+          <div className="bg-[#435334] p-3 rounded-2xl">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+              <polyline points="9 22 9 12 15 12 15 22" />
+            </svg>
+          </div>
         </div>
 
-        <button type="submit" className="w-full bg-blue-600 text-white font-black py-4 rounded-2xl hover:bg-blue-700 transition uppercase tracking-widest shadow-lg">
-          {primeiroAcesso ? 'Salvar e Entrar' : 'Acessar Painel'}
-        </button>
+        <header className="text-center mb-10">
+          <h1 className="text-xl font-black text-[#435334] uppercase tracking-wider">Painel do Síndico</h1>
+          <p className="text-[9px] font-bold text-[#435334]/60 uppercase tracking-[0.3em] mt-1">Parque dos Eucaliptos</p>
+        </header>
 
-        <p className="mt-6 text-[9px] text-center text-gray-400 font-bold uppercase tracking-widest">
-          Acesso restrito ao administrador do sistema
-        </p>
-      </form>
+        <form onSubmit={handleLogin} className="space-y-6">
+          <div className="space-y-2">
+            <label className="text-[10px] font-black text-[#435334]/60 uppercase ml-1 tracking-widest">E-mail de Acesso</label>
+            <div className="relative">
+              <User className="absolute left-5 top-1/2 -translate-y-1/2 text-[#435334]/30" size={16} />
+              <input
+                type="email"
+                className="w-full bg-[#e4e9f7]/50 border-none rounded-2xl p-4 pl-14 text-sm font-medium text-[#435334] outline-none"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="admin@teste.com.br"
+                required
+              />
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-[10px] font-black text-[#435334]/60 uppercase ml-1 tracking-widest">Senha Pessoal</label>
+            <div className="relative">
+              <Lock className="absolute left-5 top-1/2 -translate-y-1/2 text-[#435334]/30" size={16} />
+              <input
+                type={verSenha ? "text" : "password"}
+                className="w-full bg-[#e4e9f7]/50 border-none rounded-2xl p-4 pl-14 text-sm font-medium text-[#435334] outline-none"
+                value={senha}
+                onChange={(e) => setSenha(e.target.value)}
+                placeholder="••••••••••"
+                required
+              />
+              {/* CORREÇÃO: Mudei para type="button" para não disparar o login sozinho */}
+              <button
+                type="button"
+                onClick={() => setVerSenha(!verSenha)}
+                className="absolute right-5 top-1/2 -translate-y-1/2 text-[#435334]/30 hover:text-[#435334]"
+              >
+                {verSenha ? <EyeOff size={16} /> : <Eye size={16} />}
+              </button>
+            </div>
+          </div>
+
+          {erro && <p className="text-[10px] text-center font-bold text-red-500 uppercase">{erro}</p>}
+
+          <button
+            disabled={carregando}
+            type="submit"
+            className="w-full bg-[#435334] hover:bg-[#354229] text-white font-bold py-4 rounded-2xl shadow-md transition-all active:scale-[0.98] flex items-center justify-center gap-2 text-sm tracking-widest uppercase disabled:opacity-50"
+          >
+            {carregando ? <Loader2 className="animate-spin" size={18} /> : "Entrar no Painel"}
+            {!carregando && <ArrowRight size={18} />}
+          </button>
+        </form>
+      </div>
     </div>
   );
 }

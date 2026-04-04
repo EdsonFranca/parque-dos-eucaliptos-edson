@@ -1,134 +1,265 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { createClient } from '@supabase/supabase-js';
+import { LogOut, Bot, Bell, ShieldCheck, MapPin, Search, Sparkles, Heart, MessageCircle, Send, CheckCircle2 } from 'lucide-react';
 
-export default function AreaDoMorador() {
-  const [avisos, setAvisos] = useState<any[]>([]);
-  const [obras, setObras] = useState<any[]>([]);
-  const [perfil, setPerfil] = useState<any>(null);
-  const [novoComentario, setNovoComentario] = useState<{ [key: number]: string }>({});
+// Cliente fora do componente evita o erro de múltiplas instâncias no console
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+);
+
+export default function MuralMembros() {
   const router = useRouter();
+  const [perfil, setPerfil] = useState<any>(null);
+  const [posts, setPosts] = useState<any[]>([]);
+  const [obras, setObras] = useState<any[]>([]);
+  const [pergunta, setPergunta] = useState('');
+  const [resposta, setResposta] = useState('');
+  const [novoComentario, setNovoComentario] = useState<{ [key: string]: string }>({});
+  const [carregandoIA, setCarregandoIA] = useState(false);
+  const [hasMounted, setHasMounted] = useState(false);
 
   useEffect(() => {
-    const perfilSalvo = localStorage.getItem('perfil_morador');
-    if (!perfilSalvo) { router.push('/membros/login'); return; }
-    setPerfil(JSON.parse(perfilSalvo));
+    setHasMounted(true);
+    const dadosPerfil = localStorage.getItem('perfil_morador');
+    if (dadosPerfil) setPerfil(JSON.parse(dadosPerfil));
 
-    const buscarDadosNoStorage = () => {
-          const avisosSalvos = localStorage.getItem('avisos_condominio');
-          const obrasSalvas = localStorage.getItem('obras_condominio');
-          if (avisosSalvos) setAvisos(JSON.parse(avisosSalvos));
-          if (obrasSalvas) setObras(JSON.parse(obrasSalvas));
-        };
-    buscarDadosNoStorage();
-        // Faz o mural do morador atualizar sozinho a cada 2 segundos
-        const intervalo = setInterval(buscarDadosNoStorage, 2000);
-        return () => clearInterval(intervalo);
+    const fetchData = async () => {
+      // 1. Busca Avisos (Posts simples do síndico)
+      const { data: avisos } = await supabase.from('posts').select('*').order('created_at', { ascending: false });
+      if (avisos) setPosts(avisos);
+
+      // 2. Busca Obras e inclui os comentários relacionados
+      const { data: listaObras } = await supabase
+        .from('obras')
+        .select('*, comentarios_obras(*)')
+        .order('created_at', { ascending: false });
+      if (listaObras) setObras(listaObras);
+    };
+
+    fetchData();
+    const intervalo = setInterval(fetchData, 5000);
+    return () => clearInterval(intervalo);
   }, []);
 
-  const handleSair = () => {
-    localStorage.removeItem('perfil_morador'); // Limpa só o morador
-    router.push('/');
+  // --- FUNÇÃO DO ZELADOR IA (A QUE ESTAVA FALTANDO) ---
+  const perguntarZelador = async () => {
+    if (!pergunta) return;
+    setCarregandoIA(true);
+    setResposta('Consultando estatuto...');
+
+    try {
+      const resIA = await fetch('/api/ingestao', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ texto: pergunta }),
+      });
+      const { embedding } = await resIA.json();
+
+      const { data: documentos } = await supabase.rpc('match_documentos', {
+        query_embedding: embedding,
+        match_threshold: 0.1,
+        match_count: 1,
+      });
+
+      if (documentos && documentos.length > 0) setResposta(documentos[0].content);
+      else setResposta("Não encontrei essa regra nas normas do condomínio.");
+    } catch (err) {
+      setResposta("Erro ao conectar com o Zelador Digital.");
+    } finally {
+      setCarregandoIA(false);
+    }
   };
 
-  const darLike = (obraId: number) => {
-    const novasObras = obras.map(o => {
-      if (o.id === obraId) {
-        const listaLikes = o.likes || [];
-        // Verifica se o nome do morador já está na lista de likes dessa obra
-        if (listaLikes.includes(perfil.nome)) {
-          alert("Você já curtiu esta atualização!");
-          return o;
-        }
-        return { ...o, likes: [...listaLikes, perfil.nome] };
-      }
-      return o;
-    });
-    setObras(novasObras);
-    localStorage.setItem('obras_condominio', JSON.stringify(novasObras));
+  // --- LÓGICA DE CURTIDA ---
+  const handleLike = async (obraId: string, likesAtuais: string[]) => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return alert("Faça login para curtir!");
+
+    // Garante que likesAtuais seja um array
+    const listaLikes = likesAtuais || [];
+
+    if (listaLikes.includes(user.id)) return alert("Você já curtiu esta obra!");
+
+    const novosLikes = [...listaLikes, user.id];
+    const { error } = await supabase.from('obras').update({ likes: novosLikes }).eq('id', obraId);
+
+    if (!error) {
+      setObras(prev => prev.map(o => o.id === obraId ? { ...o, likes: novosLikes } : o));
+    }
   };
 
-  const adicionarComentario = (obraId: number) => {
+const limparZelador = () => {
+  setPergunta('');
+  setResposta('');
+};
+
+  // --- LÓGICA DE COMENTÁRIO ---
+  const handleComentar = async (obraId: string) => {
     const texto = novoComentario[obraId];
     if (!texto) return;
 
-    const novasObras = obras.map(o => {
-      if (o.id === obraId) {
-        const comentarios = o.comentarios || [];
-        return { ...o, comentarios: [...comentarios, { usuario: perfil.nome, texto, data: new Date().toLocaleTimeString() }] };
-      }
-      return o;
-    });
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return alert("Faça login para comentar!");
 
-    setObras(novasObras);
-    localStorage.setItem('obras_condominio', JSON.stringify(novasObras));
-    setNovoComentario({ ...novoComentario, [obraId]: '' });
+    const { error } = await supabase.from('comentarios_obras').insert([
+      {
+        obra_id: obraId,
+        usuario_id: user.id,
+        usuario_nome: perfil?.nome || 'Morador',
+        texto
+      }
+    ]);
+
+    if (!error) {
+      setNovoComentario({ ...novoComentario, [obraId]: '' });
+      // O fetch automático do setInterval atualizará a lista
+    }
   };
 
+  if (!hasMounted) return <div className="min-h-screen bg-[#435334]" />;
+
   return (
-    <div className="min-h-screen bg-slate-50 text-black" translate="no">
-      <nav className="bg-blue-800 text-white p-4 shadow-md sticky top-0 z-50 flex justify-between items-center">
-        <div className="flex items-center gap-3">
-          <img src={perfil?.foto} className="w-10 h-10 rounded-full border-2 border-white object-cover" />
-          <span className="font-bold text-sm">Olá, {perfil?.nome.split(' ')[0]}</span>
-        </div>
-        <button onClick={handleSair} className="text-xs bg-red-500 px-3 py-1 rounded-full font-bold">Sair</button>
-      </nav>
+    <div className="min-h-screen bg-[url('https://unsplash.com')] bg-cover bg-fixed bg-center text-slate-900">
+      <div className="min-h-screen bg-black/40 backdrop-blur-[2px] p-4 md:p-8">
 
-      <main className="max-w-2xl mx-auto p-4 space-y-8">
-        {/* RENDERIZAÇÃO DOS AVISOS (Já tínhamos) */}
-        <section className="space-y-3">
-           {avisos.map(a => (
-              <div key={a.id} className={`p-4 rounded-xl border-l-4 ${a.urgente ? 'bg-red-100 border-red-500' : 'bg-white border-blue-500 shadow-sm'}`}>
-                <h3 className="font-bold text-xs uppercase">{a.urgente ? '🚨 ' : ''}{a.titulo}</h3>
-                <p className="text-sm text-gray-700 mt-1">{a.mensagem}</p>
-              </div>
-           ))}
-        </section>
-
-        {/* GALERIA DE OBRAS COM LIKES E COMENTÁRIOS */}
-        <section className="space-y-6">
-          {obras.map(o => (
-            <div key={o.id} className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
-              <img src={o.imagemUrl} className="w-full h-56 object-cover" />
-              <div className="p-5">
-                <p className="text-sm font-medium mb-3">{o.texto}</p>
-
-                {/* Barra de Progresso */}
-                <div className="w-full bg-gray-100 rounded-full h-2 mb-4">
-                  <div className="bg-green-500 h-2 rounded-full" style={{ width: `${o.progresso}%` }}></div>
-                </div>
-
-                <div className="flex justify-between items-center mb-4">
-                  <button onClick={() => darLike(o.id)} className="flex items-center gap-2 bg-blue-50 px-4 py-2 rounded-full text-blue-600 font-bold text-xs hover:bg-blue-100">
-                    👍 {o.likes || 0} Curtidas
-                  </button>
-                  <span className="text-[10px] text-gray-400 font-bold">{o.dataHora}</span>
-                </div>
-
-                {/* Seção de Comentários */}
-                <div className="border-t pt-4 space-y-2">
-                   {o.comentarios?.map((c: any, i: number) => (
-                     <div key={i} className="text-[11px] bg-gray-50 p-2 rounded-lg">
-                        <span className="font-bold text-blue-800">{c.usuario}: </span> {c.texto}
-                     </div>
-                   ))}
-                   <div className="flex gap-2 mt-3">
-                      <input
-                        type="text" placeholder="Dúvida ou elogio..."
-                        className="flex-1 text-xs p-2 border rounded-lg outline-none"
-                        value={novoComentario[o.id] || ''}
-                        onChange={(e) => setNovoComentario({...novoComentario, [o.id]: e.target.value})}
-                      />
-                      <button onClick={() => adicionarComentario(o.id)} className="bg-blue-600 text-white px-3 py-1 rounded-lg text-[10px] font-bold">Enviar</button>
-                   </div>
-                </div>
-              </div>
+        {/* HEADER */}
+        <header className="max-w-6xl mx-auto mb-8 flex justify-between items-center bg-white/80 backdrop-blur-md p-5 rounded-[2rem] shadow-2xl border border-white/20">
+          <div className="flex items-center gap-4">
+            <div className="w-14 h-14 rounded-2xl border-2 border-[#435334] overflow-hidden">
+              <img src={perfil?.foto || 'https://dicebear.com'} className="w-full h-full object-cover" />
             </div>
-          ))}
-        </section>
-      </main>
+            <div>
+              <h1 className="text-lg font-black text-[#435334]">Olá, {perfil?.nome || 'Morador'}</h1>
+              <p className="text-[10px] font-bold text-[#435334]/60 uppercase tracking-widest">Unidade {perfil?.apto}</p>
+            </div>
+          </div>
+          <button onClick={() => { supabase.auth.signOut(); router.push('/'); }} className="p-3 bg-red-500/10 text-red-600 rounded-2xl hover:bg-red-500 hover:text-white transition-all">
+            <LogOut size={20} />
+          </button>
+        </header>
+
+        <main className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8">
+
+          <div className="lg:col-span-8 space-y-10">
+
+            {/* SEÇÃO OBRAS */}
+            <section className="space-y-6">
+              <h2 className="text-white font-black text-sm uppercase tracking-widest ml-4 flex items-center gap-2">
+                <ShieldCheck size={18} /> Acompanhamento de Obras
+              </h2>
+              {obras.length > 0 ? obras.map(obra => (
+                <div key={obra.id} className="bg-white/95 backdrop-blur-md rounded-[2.5rem] shadow-2xl overflow-hidden border border-white/20 animate-in fade-in slide-in-from-bottom-4">
+                  <img src={obra.imagem_url} className="w-full h-72 object-cover" alt="Obra" />
+                  <div className="p-8">
+                    <div className="flex justify-between items-center mb-4">
+                      <span className="text-[10px] font-black text-[#435334]/50 uppercase tracking-widest">Status da Obra</span>
+                      <span className="font-black text-[#435334]">{obra.progresso}%</span>
+                    </div>
+                    <div className="w-full bg-slate-200 h-3 rounded-full mb-6 overflow-hidden">
+                      <div className="bg-green-600 h-full transition-all duration-1000" style={{ width: `${obra.progresso}%` }} />
+                    </div>
+                    <p className="text-slate-700 font-medium mb-8 leading-relaxed">{obra.descricao}</p>
+
+                    <div className="flex items-center gap-6 mb-8 pt-4 border-t border-slate-100">
+                      <button onClick={() => handleLike(obra.id, obra.likes)} className="flex items-center gap-2 text-red-500 font-bold hover:scale-110 transition-transform">
+                        <Heart size={20} fill={obra.likes?.length > 0 ? "currentColor" : "none"} /> {obra.likes?.length || 0}
+                      </button>
+                      <div className="flex items-center gap-2 text-slate-400 font-bold">
+                        <MessageCircle size={20} /> {obra.comentarios_obras?.length || 0} Comentários
+                      </div>
+                    </div>
+
+                    <div className="space-y-3 mb-6 max-h-40 overflow-y-auto pr-2 custom-scrollbar">
+                      {obra.comentarios_obras?.map((c: any) => (
+                        <div key={c.id} className="bg-slate-50 p-3 rounded-2xl text-xs border border-slate-100">
+                          <span className="font-black text-[#435334] mr-2 uppercase">{c.usuario_nome}:</span>
+                          <span className="text-slate-600">{c.texto}</span>
+                        </div>
+                      ))}
+                    </div>
+
+                    <div className="flex gap-2">
+                      <input
+                        className="flex-1 bg-white border-2 border-slate-100 p-4 rounded-2xl text-sm outline-none focus:border-[#435334]/30 transition-all"
+                        placeholder="Escreva um comentário..."
+                        value={novoComentario[obra.id] || ''}
+                        onChange={(e) => setNovoComentario({...novoComentario, [obra.id]: e.target.value})}
+                      />
+                      <button onClick={() => handleComentar(obra.id)} className="bg-[#435334] text-white p-4 rounded-2xl hover:bg-[#2d3a22] transition-all shadow-lg shadow-[#435334]/20">
+                        <Send size={18} />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )) : (
+                <p className="text-white/40 italic ml-4 text-sm">Nenhuma obra em andamento.</p>
+              )}
+            </section>
+
+            {/* SEÇÃO COMUNICADOS */}
+            <section className="space-y-6">
+              <h2 className="text-white font-black text-sm uppercase tracking-widest ml-4 flex items-center gap-2">
+                <Bell size={18} /> Mural de Comunicados
+              </h2>
+              {posts.map(post => (
+                <div key={post.id} className={`bg-white/90 p-7 rounded-[2.5rem] shadow-xl border-l-[10px] ${post.urgente ? 'border-red-500' : 'border-[#435334]'}`}>
+                  <div className="flex justify-between items-start mb-3">
+                    <h3 className="font-black text-xl text-[#435334] uppercase tracking-tight leading-tight">{post.titulo}</h3>
+                    {post.urgente && <span className="bg-red-500 text-white text-[9px] font-black px-3 py-1 rounded-full animate-pulse shadow-lg">URGENTE 🚨</span>}
+                  </div>
+                  <p className="text-slate-600 font-medium leading-relaxed">{post.conteudo}</p>
+                </div>
+              ))}
+            </section>
+          </div>
+
+          {/* COLUNA ZELADOR IA */}
+          <div className="lg:col-span-4">
+            <div className="bg-[#eef0e5]/95 backdrop-blur-xl p-8 rounded-[3rem] shadow-2xl border border-white/50 sticky top-8">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="bg-[#435334] p-2 rounded-xl"><Bot className="text-white" size={20} /></div>
+                <div>
+                  <h3 className="text-[#435334] font-black text-lg leading-none">Zelador Digital</h3>
+                  <span className="text-[9px] font-bold text-[#435334]/40 uppercase tracking-widest">Inteligência Artificial</span>
+                </div>
+              </div>
+              <textarea
+                className="w-full bg-white/50 border-2 border-[#435334]/5 rounded-2xl p-4 text-sm mb-4 h-32 outline-none focus:border-[#435334]/20 transition-all resize-none shadow-inner"
+                placeholder="Qual sua dúvida sobre as regras?"
+                value={pergunta}
+                onChange={(e) => setPergunta(e.target.value)}
+              />
+              <button
+                onClick={perguntarZelador}
+                disabled={carregandoIA}
+                className="w-full bg-[#435334] text-white font-black py-5 rounded-2xl hover:bg-[#2d3a22] transition-all flex items-center justify-center gap-3 shadow-lg shadow-[#435334]/20 disabled:opacity-50"
+              >
+                {carregandoIA ? 'Consultando...' : 'ENVIAR PERGUNTA'} <Search size={18} />
+              </button>
+              {resposta && (
+                <div className="mt-6 p-5 bg-white/80 rounded-2xl border border-[#435334]/10 animate-in fade-in slide-in-from-top-2 shadow-sm">
+                  <p className="text-[10px] font-black text-[#435334]/40 uppercase mb-2 tracking-widest flex items-center gap-2">
+                    <ShieldCheck size={12} /> Resposta Oficial:
+                  </p>
+                  <p className="text-sm font-medium text-slate-700 italic leading-relaxed mb-4">"{resposta}"</p>
+
+                  <button
+                    onClick={limparZelador}
+                    className="w-full bg-white border-2 border-[#435334]/10 text-[#435334] font-black py-2 rounded-xl text-[10px] uppercase tracking-widest hover:bg-[#435334] hover:text-white transition-all flex items-center justify-center gap-2"
+                  >
+                    <CheckCircle2 size={14} /> Entendido, obrigado!
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+
+        </main>
+      </div>
     </div>
   );
 }
