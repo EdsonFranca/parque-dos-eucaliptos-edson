@@ -1,113 +1,148 @@
 'use client';
-import { useState } from 'react';
+
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { supabase } from '@/lib/supabase';
-import { Lock, User, ArrowRight, Eye, EyeOff, Loader2 } from 'lucide-react';
+import { supabase } from '@/lib/supabase'; // Mantendo sua importação original
+import { User, Lock, ArrowRight, TreePine, AlertCircle, Eye, EyeOff, Loader2 } from 'lucide-react';
 
 export default function LoginAdmin() {
   const [email, setEmail] = useState('');
   const [senha, setSenha] = useState('');
   const [verSenha, setVerSenha] = useState(false);
   const [erro, setErro] = useState('');
+  const [hasMounted, setHasMounted] = useState(false);
   const [carregando, setCarregando] = useState(false);
+  const router = useRouter();
+
+  useEffect(() => {
+    setHasMounted(true);
+  }, []);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setErro('');
     setCarregando(true);
-    console.log("1. Iniciei a função");
 
     try {
-        console.log("2. Tentando acessar o objeto supabase...");
       const { data, error } = await supabase.auth.signInWithPassword({
         email: email.trim(),
         password: senha,
       });
-console.log("3. Supabase respondeu!");
+
       if (error) {
-        setErro("E-mail ou senha incorretos.");
+        setErro("Acesso Negado: Verifique as credenciais de administrador.");
         setCarregando(false);
         return;
       }
 
       if (data?.session) {
-        // Redirecionamento único e definitivo
-        window.location.href = '/admin/dashboard';
+        // Usando router.push para consistência com o Next.js,
+        // ou mantenha window.location.href se preferir o refresh total
+        router.push('/admin/dashboard');
       }
     } catch (err) {
-      setErro("Erro interno no sistema.");
+      setErro("Erro na conexão com o servidor.");
       setCarregando(false);
     }
   };
 
+  if (!hasMounted) return <div className="min-h-screen bg-[#435334]" />;
+
   return (
-    <div className="min-h-screen bg-[#9ea392] flex items-center justify-center p-6 font-sans">
-      <div className="w-full max-w-[400px] bg-[#eef0e5] rounded-[3rem] p-10 shadow-sm relative overflow-hidden">
+    <div className="min-h-screen bg-[url('https://unsplash.com')] bg-cover bg-fixed bg-center flex items-center justify-center p-6">
+      {/* Overlay Escuro para Contraste */}
+      <div className="absolute inset-0 bg-black/50 backdrop-blur-[2px]"></div>
 
-        <div className="flex justify-center mb-8">
-          <div className="bg-[#435334] p-3 rounded-2xl">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
-              <polyline points="9 22 9 12 15 12 15 22" />
-            </svg>
+      <div className="w-full max-w-md relative animate-in fade-in zoom-in-95 duration-500">
+        <form
+          onSubmit={handleLogin}
+          className="bg-[#eef0e5]/95 backdrop-blur-xl p-10 rounded-[3rem] shadow-2xl border border-white/50 relative overflow-hidden"
+        >
+          {/* Ícone de fundo decorativo */}
+          <div className="absolute -bottom-10 -left-10 opacity-5 text-[#435334]">
+            <TreePine size={250} />
           </div>
-        </div>
 
-        <header className="text-center mb-10">
-          <h1 className="text-xl font-black text-[#435334] uppercase tracking-wider">Painel do Síndico</h1>
-          <p className="text-[9px] font-bold text-[#435334]/60 uppercase tracking-[0.3em] mt-1">Parque dos Eucaliptos</p>
-        </header>
-
-        <form onSubmit={handleLogin} className="space-y-6">
-          <div className="space-y-2">
-            <label className="text-[10px] font-black text-[#435334]/60 uppercase ml-1 tracking-widest">E-mail de Acesso</label>
-            <div className="relative">
-              <User className="absolute left-5 top-1/2 -translate-y-1/2 text-[#435334]/30" size={16} />
-              <input
-                type="email"
-                className="w-full bg-[#e4e9f7]/50 border-none rounded-2xl p-4 pl-14 text-sm font-medium text-[#435334] outline-none"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="admin@teste.com.br"
-                required
-              />
+          <header className="text-center mb-10 relative">
+            <div className="bg-[#435334] w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg -rotate-3 hover:rotate-0 transition-transform">
+              <Lock className="text-white" size={28} />
             </div>
-          </div>
+            <h1 className="text-2xl font-black text-[#435334] uppercase tracking-tighter">Painel do Síndico</h1>
+            <p className="text-[10px] font-black text-[#435334]/50 uppercase tracking-[0.3em] mt-2">Gestão Administrativa</p>
+          </header>
 
-          <div className="space-y-2">
-            <label className="text-[10px] font-black text-[#435334]/60 uppercase ml-1 tracking-widest">Senha Pessoal</label>
-            <div className="relative">
-              <Lock className="absolute left-5 top-1/2 -translate-y-1/2 text-[#435334]/30" size={16} />
-              <input
-                type={verSenha ? "text" : "password"}
-                className="w-full bg-[#e4e9f7]/50 border-none rounded-2xl p-4 pl-14 text-sm font-medium text-[#435334] outline-none"
-                value={senha}
-                onChange={(e) => setSenha(e.target.value)}
-                placeholder="••••••••••"
-                required
-              />
-              {/* CORREÇÃO: Mudei para type="button" para não disparar o login sozinho */}
-              <button
-                type="button"
-                onClick={() => setVerSenha(!verSenha)}
-                className="absolute right-5 top-1/2 -translate-y-1/2 text-[#435334]/30 hover:text-[#435334]"
-              >
-                {verSenha ? <EyeOff size={16} /> : <Eye size={16} />}
-              </button>
+          <div className="space-y-4 mb-8 relative">
+            <div className="space-y-1">
+              <label className="text-[10px] font-black text-[#435334]/60 uppercase ml-4 tracking-widest">E-mail Administrativo</label>
+              <div className="relative">
+                <div className="absolute left-5 top-1/2 -translate-y-1/2 text-[#435334]/30">
+                  <User size={18} />
+                </div>
+                <input
+                  type="email"
+                  placeholder="admin@condominio.com"
+                  className="w-full bg-white border-2 border-[#435334]/5 rounded-2xl p-5 pl-14 text-sm font-bold outline-none focus:border-[#435334]/30 transition-all shadow-inner text-black"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                />
+              </div>
             </div>
-          </div>
 
-          {erro && <p className="text-[10px] text-center font-bold text-red-500 uppercase">{erro}</p>}
+            <div className="space-y-1">
+              <label className="text-[10px] font-black text-[#435334]/60 uppercase ml-4 tracking-widest">Senha de Acesso</label>
+              <div className="relative">
+                <div className="absolute left-5 top-1/2 -translate-y-1/2 text-[#435334]/30">
+                  <Lock size={18} />
+                </div>
+                <input
+                  type={verSenha ? "text" : "password"}
+                  placeholder="••••••••"
+                  className="w-full bg-white border-2 border-[#435334]/5 rounded-2xl p-5 pl-14 text-sm font-bold outline-none focus:border-[#435334]/30 transition-all shadow-inner text-black"
+                  value={senha}
+                  onChange={(e) => setSenha(e.target.value)}
+                  required
+                />
+                <button
+                  type="button"
+                  onClick={() => setVerSenha(!verSenha)}
+                  className="absolute right-5 top-1/2 -translate-y-1/2 text-[#435334]/30 hover:text-[#435334]"
+                >
+                  {verSenha ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
+              </div>
+            </div>
+
+            {erro && (
+              <div className="flex items-center gap-2 p-3 bg-red-500/10 border border-red-500/20 rounded-xl animate-in shake duration-300">
+                <AlertCircle className="text-red-500" size={14} />
+                <p className="text-[10px] text-red-600 font-bold uppercase">{erro}</p>
+              </div>
+            )}
+          </div>
 
           <button
-            disabled={carregando}
             type="submit"
-            className="w-full bg-[#435334] hover:bg-[#354229] text-white font-bold py-4 rounded-2xl shadow-md transition-all active:scale-[0.98] flex items-center justify-center gap-2 text-sm tracking-widest uppercase disabled:opacity-50"
+            disabled={carregando}
+            className="w-full bg-[#435334] hover:bg-[#2d3a22] text-white font-black py-5 rounded-2xl shadow-xl transition-all transform active:scale-[0.98] flex items-center justify-center gap-3 tracking-widest text-xs disabled:opacity-50"
           >
-            {carregando ? <Loader2 className="animate-spin" size={18} /> : "Entrar no Painel"}
-            {!carregando && <ArrowRight size={18} />}
+            {carregando ? (
+              <>
+                <Loader2 className="animate-spin" size={18} />
+                AUTENTICANDO...
+              </>
+            ) : (
+              <>
+                ACESSAR PAINEL
+                <ArrowRight size={18} />
+              </>
+            )}
           </button>
         </form>
+
+        <p className="text-center mt-8 text-white/40 text-[10px] font-bold uppercase tracking-[0.4em]">
+          Acesso Restrito &bull; Nível Administrativo
+        </p>
       </div>
     </div>
   );
