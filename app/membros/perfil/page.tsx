@@ -56,7 +56,7 @@ export default function ConfigurarPerfil() {
   if (!error) {
     // Também mantém no localStorage para acesso rápido na UI
     localStorage.setItem('perfil_morador', JSON.stringify(dadosPerfil));
-    router.push('/membros');
+    router.push('/dashboard');
   } else {
     alert("Erro ao salvar perfil: " + error.message);
   }

@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { createClient } from '@supabase/supabase-js';
 import { Bot, Search, BookOpen, ShieldCheck, Sparkles, ArrowLeft } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import FaleComSindicoFloating from '@/components/FaleComSindicoFloating';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -60,6 +61,7 @@ export default function ZeladorChat() {
   return (
     <div className="min-h-screen bg-[url('https://unsplash.com')] bg-cover bg-fixed bg-center text-slate-900">
       <div className="min-h-screen bg-black/40 backdrop-blur-sm p-4 md:p-8 flex flex-col items-center justify-center">
+        <FaleComSindicoFloating />
 
         {/* Botão Voltar */}
         <button

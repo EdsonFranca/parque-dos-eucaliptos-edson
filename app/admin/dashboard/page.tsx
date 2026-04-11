@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { createClient } from '@supabase/supabase-js';
 import {
   LogOut, Megaphone, HardHat, Camera, Trash2,
-  ArrowRight, ShieldCheck, Clock, Loader2, Eraser, Heart
+  ArrowRight, ShieldCheck, Clock, Loader2, Eraser, Heart, FileText, Users, Mail, XCircle
 } from 'lucide-react';
 
 const supabase = createClient(
@@ -14,6 +14,16 @@ const supabase = createClient(
 );
 
 export default function DashboardAdmin() {
+  const [usuarios, setUsuarios] = useState<any[]>([]);
+  const [carregandoUsuarios, setCarregandoUsuarios] = useState(false);
+  const [erroUsuarios, setErroUsuarios] = useState('');
+  const [pesquisaUsuario, setPesquisaUsuario] = useState('');
+  const [usuariosFiltrados, setUsuariosFiltrados] = useState<any[]>([]);
+  const [sessoesAtivas, setSessoesAtivas] = useState<any[]>([]);
+  const [carregandoSessoes, setCarregandoSessoes] = useState(false);
+  const [erroSessoes, setErroSessoes] = useState('');
+  const [resetandoEmail, setResetandoEmail] = useState<string | null>(null);
+  const [excluindoUsuario, setExcluindoUsuario] = useState<string | null>(null);
   const [galeria, setGaleria] = useState<any[]>([]);
   const [avisos, setAvisos] = useState<any[]>([]);
   const [descricao, setDescricao] = useState('');
@@ -21,25 +31,201 @@ export default function DashboardAdmin() {
   const [progressoNovo, setProgressoNovo] = useState(50);
   const [tituloAviso, setTituloAviso] = useState('');
   const [msgAviso, setMsgAviso] = useState('');
+  const [estatutoText, setEstatutoText] = useState('');
   const [isUrgente, setIsUrgente] = useState(false);
   const [carregando, setCarregando] = useState(false);
+  const [carregandoPDF, setCarregandoPDF] = useState(false);
   const [hasMounted, setHasMounted] = useState(false);
+  const [loading, setLoading] = useState(true);
   const router = useRouter();
+
+  const getAuthHeader = async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session?.access_token) return null;
+    return { Authorization: `Bearer ${session.access_token}` };
+  };
+
+  const carregarUsuarios = async () => {
+    setCarregandoUsuarios(true);
+    setErroUsuarios('');
+    try {
+      const headers = await getAuthHeader();
+      if (!headers) return;
+
+      const res = await fetch('/api/admin/usuarios', { headers });
+      const data = await res.json();
+      if (!res.ok) {
+        setErroUsuarios(data.error || 'Falha ao carregar usuarios.');
+        return;
+      }
+      setUsuarios(data.usuarios || []);
+    } catch (err) {
+      setErroUsuarios('Erro de conexao ao carregar usuarios.');
+    } finally {
+      setCarregandoUsuarios(false);
+    }
+  };
+
+  const filtrarUsuarios = (termo: string) => {
+    if (!termo.trim()) {
+      setUsuariosFiltrados([]);
+      return;
+    }
+
+    const termoLower = termo.toLowerCase();
+    const filtrados = usuarios.filter(usuario => 
+      (usuario.nome && usuario.nome.toLowerCase().includes(termoLower)) ||
+      (usuario.email && usuario.email.toLowerCase().includes(termoLower))
+    );
+    setUsuariosFiltrados(filtrados);
+  };
+
+  useEffect(() => {
+    filtrarUsuarios(pesquisaUsuario);
+  }, [usuarios, pesquisaUsuario]);
+
+  const carregarSessoesAtivas = async () => {
+    setCarregandoSessoes(true);
+    setErroSessoes('');
+    try {
+      const headers = await getAuthHeader();
+      if (!headers) return;
+
+      const res = await fetch('/api/admin/sessoes', { headers });
+      const data = await res.json();
+      if (!res.ok) {
+        setErroSessoes(data.error || 'Falha ao carregar sessões ativas.');
+        return;
+      }
+      
+      setSessoesAtivas(data.sessoes || []);
+    } catch (err) {
+      console.error('Erro ao carregar sessões:', err);
+      setErroSessoes('Erro de conexao ao carregar sessões.');
+    } finally {
+      setCarregandoSessoes(false);
+    }
+  };
+
+  const enviarResetSenha = async (email: string) => {
+    if (!confirm(`Enviar e-mail de reset para ${email}?`)) return;
+    setResetandoEmail(email);
+    try {
+      const headers = await getAuthHeader();
+      if (!headers) return;
+
+      const res = await fetch('/api/admin/usuarios', {
+        method: 'POST',
+        headers: { ...headers, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        alert(data.error || 'Nao foi possivel enviar reset.');
+        return;
+      }
+      alert('E-mail de redefinicao enviado com sucesso.');
+    } catch (err) {
+      alert('Erro de conexao ao enviar reset.');
+    } finally {
+      setResetandoEmail(null);
+    }
+  };
+
+  const excluirUsuario = async (userId: string, nome: string, email: string) => {
+    console.log('excluirUsuario called with:', { userId, nome, email });
+    
+    if (!confirm(`Tem certeza que deseja excluir o usuário "${nome}" (${email})?\n\nEsta ação é irreversível!`)) return;
+    setExcluindoUsuario(userId);
+    try {
+      const headers = await getAuthHeader();
+      console.log('Headers obtained:', headers);
+      if (!headers) {
+        console.log('No headers available');
+        return;
+      }
+
+      console.log('Sending DELETE request...');
+      const res = await fetch('/api/admin/usuarios', {
+        method: 'DELETE',
+        headers: { ...headers, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId }),
+      });
+      
+      console.log('Response status:', res.status);
+      const data = await res.json();
+      console.log('Response data:', data);
+      
+      if (!res.ok) {
+        alert(data.error || 'Nao foi possivel excluir o usuário.');
+        return;
+      }
+      alert('Usuário excluído com sucesso.');
+      setUsuarios(prev => prev.filter(u => u.id !== userId));
+    } catch (err) {
+      console.error('Error in excluirUsuario:', err);
+      alert('Erro de conexao ao excluir usuário.');
+    } finally {
+      setExcluindoUsuario(null);
+    }
+  };
+
+  useEffect(() => {
+    const checkAdmin = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+
+      if (!user) {
+        router.push('/admin/login');
+        return;
+      }
+
+      const { data: perfil, error } = await supabase
+        .from('perfis_moradores')
+        .select('tipo_usuario')
+        .eq('id', user.id)
+        .single();
+
+      if (error || perfil?.tipo_usuario !== 'admin') {
+        router.push('/');
+        return;
+      }
+
+      const { data: listaObras } = await supabase
+        .from('obras')
+        .select('*, comentarios_obras(*)')
+        .order('created_at', { ascending: false });
+      if (listaObras) setGaleria(listaObras);
+
+      const { data: listaPosts } = await supabase
+        .from('posts')
+        .select('*')
+        .neq('autor', 'ESTATUTO')
+        .order('created_at', { ascending: false });
+      if (listaPosts) setAvisos(listaPosts);
+      setLoading(false);
+      carregarUsuarios();
+      carregarSessoesAtivas();
+    };
+
+    checkAdmin();
+  }, [router]);
 
   useEffect(() => {
     setHasMounted(true);
-    const fetchData = async () => {
-      // Busca Avisos
-      const { data: ads } = await supabase.from('posts').select('*').order('created_at', { ascending: false });
-      if (ads) setAvisos(ads);
+  }, []);
 
-      // Busca Obras com Comentários
-      const { data: obs } = await supabase.from('obras').select('*, comentarios_obras(*)').order('created_at', { ascending: false });
-      if (obs) setGaleria(obs);
-    };
-    fetchData();
-    const intervalo = setInterval(fetchData, 5000);
-    return () => clearInterval(intervalo);
+  useEffect(() => {
+    if (!pesquisaUsuario) {
+      setUsuariosFiltrados([]);
+    }
+  }, [pesquisaUsuario]);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      carregarSessoesAtivas();
+    }, 30000);
+
+    return () => clearInterval(interval);
   }, []);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -51,7 +237,6 @@ export default function DashboardAdmin() {
     }
   };
 
-  // Função para atualizar progresso no banco (chamada ao soltar o mouse)
   const atualizarProgressoNoBanco = async (id: string, novoValor: number) => {
     const { error } = await supabase
       .from('obras')
@@ -61,6 +246,55 @@ export default function DashboardAdmin() {
     if (error) {
       alert("Erro ao salvar no banco: " + error.message);
     }
+  };
+
+  const handleImportarPDF = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const arquivo = e.target.files?.[0];
+    if (!arquivo) return;
+
+    setCarregandoPDF(true);
+    setEstatutoText("Processando PDF, aguarde extração do texto...");
+    
+    try {
+      const formData = new FormData();
+      formData.append('file', arquivo);
+
+      const res = await fetch('/api/extrair-pdf', {
+        method: 'POST',
+        body: formData
+      });
+
+      const data = await res.json();
+      if (res.ok) {
+        setEstatutoText(data.texto);
+      } else {
+        alert("Erro no servidor: " + data.error);
+        setEstatutoText("");
+      }
+    } catch (err) {
+      alert("Falha de rede ao tentar extrair o texto.");
+      setEstatutoText("");
+    } finally {
+      setCarregandoPDF(false);
+      e.target.value = '';
+    }
+  };
+
+  const handleAtualizarEstatuto = async () => {
+    if (!estatutoText) return alert("Extraia ou digite o texto do estatuto!");
+    setCarregando(true);
+
+    const { error } = await supabase
+      .from('posts')
+      .insert([{ titulo: 'Estatuto do Parque', conteudo: estatutoText, autor: 'ESTATUTO', urgente: false }]);
+
+    if (!error) {
+      alert("✅ Estatuto salvo! Ele está disponível na nova aba dos moradores.");
+      setEstatutoText('');
+    } else {
+       alert("Erro ao salvar o estatuto.");
+    }
+    setCarregando(false);
   };
 
   const handlePublicarAviso = async (e: React.FormEvent) => {
@@ -113,139 +347,400 @@ export default function DashboardAdmin() {
     setTituloAviso(''); setMsgAviso(''); setIsUrgente(false);
   };
 
-  if (!hasMounted) return <div className="min-h-screen bg-[#435334]" />;
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    router.replace('/admin/login');
+  };
+
+  if (!hasMounted) return <div className="min-h-screen bg-[#eaf3de]" />;
+  if (loading) return <div className="min-h-screen bg-[#eaf3de] flex items-center justify-center"><Loader2 className="animate-spin text-[#4a5937]" size={40} /></div>;
 
   return (
-    <div className="min-h-screen bg-[url('https://unsplash.com')] bg-cover bg-fixed bg-center">
-      <div className="min-h-screen bg-black/40 backdrop-blur-[2px] p-4 md:p-8">
-
-        {/* HEADER */}
-        <header className="max-w-7xl mx-auto mb-10 flex justify-between items-center bg-white/90 backdrop-blur-md p-6 rounded-[2rem] shadow-2xl border border-white/20">
-          <div className="flex items-center gap-3">
-            <div className="bg-[#435334] p-2 rounded-xl"><ShieldCheck className="text-white" size={24} /></div>
+    <div className="min-h-screen bg-[#eaf3de] text-[#2c3f1d] font-sans pb-10">
+      
+      {/* HEADER ADMINISTRATIVO */}
+      <header className="bg-[#1d2a13] px-8 md:px-12 py-6 mb-10 shadow-lg shrink-0 flex flex-col md:flex-row justify-between items-center text-white gap-6">
+          <div className="flex items-center gap-4">
+            <div className="bg-white/10 p-3 rounded-2xl"><ShieldCheck size={28} className="text-white" /></div>
             <div>
-              <h1 className="text-xl font-black text-[#435334] uppercase tracking-tighter">Painel do Síndico</h1>
-              <p className="text-[9px] font-bold text-[#435334]/50 uppercase tracking-widest leading-none">Administração Premium</p>
+              <h1 className="text-2xl font-black mb-1">Painel do Síndico</h1>
+              <p className="text-[10px] font-bold text-white/50 uppercase tracking-widest leading-none">Gestão Administrativa & Auditoria</p>
             </div>
           </div>
           <div className="flex gap-4">
-            <button onClick={limparFormularios} className="flex items-center gap-2 bg-slate-100 text-slate-600 px-5 py-2 rounded-full font-bold text-xs hover:bg-white transition-all uppercase tracking-widest">
-              <Eraser size={14} /> Limpar
+            <button onClick={limparFormularios} className="flex items-center gap-2 bg-white/10 hover:bg-white/20 text-white px-5 py-3 rounded-full font-bold text-xs transition-colors uppercase tracking-widest shadow-sm">
+              <Eraser size={14} /> Limpar Edições
             </button>
-            <button onClick={() => router.push('/')} className="flex items-center gap-2 bg-red-500/10 text-red-600 px-5 py-2 rounded-full font-bold text-xs hover:bg-red-500 hover:text-white transition-all">
-              <LogOut size={14} /> Sair
+            <button onClick={handleLogout} className="flex items-center gap-2 bg-red-600 hover:bg-red-500 text-white px-5 py-3 rounded-full font-bold text-xs transition-colors uppercase tracking-widest shadow-sm">
+              <LogOut size={14} /> Encerrar Sessão
             </button>
           </div>
-        </header>
+      </header>
 
-        <main className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8">
+      <main className="max-w-[1400px] mx-auto px-6 grid grid-cols-1 lg:grid-cols-12 gap-10">
 
-          {/* COLUNA ESQUERDA (CRIAÇÃO) */}
-          <div className="lg:col-span-5 space-y-8">
-            <section className="bg-[#eef0e5]/95 backdrop-blur-xl p-8 rounded-[2.5rem] shadow-2xl border border-white/50">
-              <div className="flex items-center gap-3 mb-6">
-                <div className="bg-[#435334] p-2 rounded-xl text-white"><HardHat size={20} /></div>
-                <h2 className="text-xl font-black text-[#435334] uppercase tracking-tight">Postar Obra</h2>
+        {/* COLUNA ESQUERDA (CRIAÇÃO DE CONTEÚDO) */}
+        <div className="lg:col-span-4 space-y-8 animate-in fade-in slide-in-from-left-8 duration-700">
+          
+          {/* Postar Obra */}
+          <section className="bg-white p-8 rounded-[2rem] shadow-sm border border-transparent hover:border-[#4a5937]/20 transition-all">
+            <div className="flex items-center gap-4 mb-8">
+              <div className="bg-[#e4eed7] p-3 rounded-2xl text-[#4a5937]"><HardHat size={24} /></div>
+              <h2 className="text-xl font-black text-[#1d2a13] uppercase tracking-tight">Postar Obra</h2>
+            </div>
+            
+            <textarea 
+              className="w-full bg-[#f4f7ef] border-none rounded-[1.5rem] p-5 text-sm mb-6 h-28 outline-none focus:ring-2 focus:ring-[#4a5937]/20 shadow-inner resize-none text-[#2c3f1d]" 
+              placeholder="Descreva o andamento da obra..." 
+              value={descricao} 
+              onChange={(e) => setDescricao(e.target.value)} 
+            />
+            
+            <div className="mb-8">
+              <div className="flex justify-between items-center mb-3">
+                 <label className="text-[10px] font-black text-[#2c3f1d]/60 uppercase tracking-widest leading-none">Avanço Físico</label>
+                 <span className="text-xs font-bold text-[#4a5937]">{progressoNovo}%</span>
               </div>
-              <textarea className="w-full bg-white border-none rounded-2xl p-4 text-sm mb-4 h-24 outline-none shadow-inner" placeholder="O que avançou hoje?" value={descricao} onChange={(e) => setDescricao(e.target.value)} />
-              <div className="mb-6">
-                <label className="text-[10px] font-black text-[#435334]/60 uppercase tracking-widest leading-none">Progresso Inicial: {progressoNovo}%</label>
-                <input type="range" className="w-full h-2 bg-white rounded-lg appearance-none cursor-pointer accent-[#435334] mt-2" value={progressoNovo} onChange={(e) => setProgressoNovo(Number(e.target.value))} />
+              <input 
+                type="range" 
+                className="w-full h-2 bg-[#dbeaeb] rounded-full appearance-none cursor-pointer accent-[#4a5937]" 
+                value={progressoNovo} 
+                onChange={(e) => setProgressoNovo(Number(e.target.value))} 
+              />
+            </div>
+
+            <label className="block border-2 border-dashed border-[#4a5937]/20 bg-[#f4f7ef] hover:bg-[#e4eed7] p-6 rounded-[1.5rem] cursor-pointer text-center transition-colors mb-8 relative">
+              {preview ? (
+                <img src={preview} className="max-h-40 mx-auto rounded-xl shadow-md object-cover" alt="preview" />
+              ) : (
+                <div className="py-6 flex flex-col items-center opacity-60 text-[#4a5937]">
+                  <Camera size={32} className="mb-2" />
+                  <span className="text-xs font-bold uppercase tracking-widest">Adicionar Foto</span>
+                </div>
+              )}
+              <input type="file" className="hidden" accept="image/*" onChange={handleFileChange} />
+            </label>
+
+            <button 
+              onClick={handlePublicarObra} 
+              disabled={carregando} 
+              className="w-full bg-[#4a5937] hover:bg-[#323d24] text-white font-black py-4 rounded-[1.5rem] transition-colors disabled:opacity-50 flex items-center justify-center gap-2 shadow-lg"
+            >
+              {carregando ? <><Loader2 className="animate-spin" size={18}/> Publicando</> : <>PUBLICAR OBRA <ArrowRight size={18} /></>}
+            </button>
+          </section>
+
+          {/* Novo Comunicado */}
+          <section className="bg-white p-8 rounded-[2rem] shadow-sm border border-transparent hover:border-[#4a5937]/20 transition-all">
+             <div className="flex items-center gap-4 mb-8">
+               <div className="bg-[#feeadd] p-3 rounded-2xl text-[#b2571b]"><Megaphone size={24} /></div>
+               <h2 className="text-xl font-black text-[#1d2a13] uppercase tracking-tight">Comunicado</h2>
+            </div>
+            
+            <input 
+              type="text" 
+              placeholder="Título Oficial" 
+              className="w-full bg-[#f4f7ef] border-transparent rounded-[1.5rem] px-5 py-4 mb-4 font-bold outline-none focus:ring-2 focus:ring-[#b2571b]/20 shadow-inner text-sm" 
+              value={tituloAviso} 
+              onChange={(e) => setTituloAviso(e.target.value)} 
+            />
+            <textarea 
+              placeholder="Digite a mensagem rápida para o mural..." 
+              className="w-full bg-[#f4f7ef] border-transparent rounded-[1.5rem] p-5 mb-4 h-28 outline-none focus:ring-2 focus:ring-[#b2571b]/20 shadow-inner text-sm resize-none" 
+              value={msgAviso} 
+              onChange={(e) => setMsgAviso(e.target.value)} 
+            />
+            
+            <label className="flex items-center gap-3 p-5 bg-red-50 hover:bg-red-100 rounded-[1.5rem] cursor-pointer mb-8 transition-colors border border-red-100">
+              <input type="checkbox" checked={isUrgente} onChange={(e) => setIsUrgente(e.target.checked)} className="w-5 h-5 accent-red-600 rounded" />
+              <span className="font-black text-red-600 text-[10px] uppercase tracking-widest">Marcar como Urgente 🚨</span>
+            </label>
+            
+            <button 
+              onClick={handlePublicarAviso} 
+              className="w-full bg-[#1d2a13] hover:bg-black text-white font-black py-4 rounded-[1.5rem] transition-colors shadow-lg flex justify-center items-center gap-2"
+            >
+              DISPARAR AVISO
+            </button>
+          </section>
+
+          {/* Estatuto do Parque */}
+          <section className="bg-gradient-to-br from-[#1d2a13] to-[#2c3f1d] p-8 rounded-[2rem] shadow-xl text-white relative overflow-hidden">
+             <div className="flex items-center justify-between mb-8 relative z-10">
+               <div className="flex items-center gap-4">
+                 <div className="bg-white/10 p-3 rounded-2xl text-white"><FileText size={24} /></div>
+                 <h2 className="text-xl font-black text-white uppercase tracking-tight">Estatuto Oficial</h2>
+               </div>
+               
+               <label className="flex items-center gap-2 bg-white hover:bg-slate-100 text-[#1d2a13] px-5 py-2.5 rounded-full cursor-pointer transition-colors shadow-sm text-xs font-bold uppercase tracking-widest">
+                 {carregandoPDF ? <Loader2 size={14} className="animate-spin" /> : <FileText size={14} />}
+                 {carregandoPDF ? 'LENDO...' : 'IMPORTAR PDF'}
+                 <input type="file" accept=".pdf" className="hidden" onChange={handleImportarPDF} disabled={carregandoPDF} />
+               </label>
+            </div>
+            
+            <textarea 
+              placeholder="Importe um PDF para povoar este documento ou cole o texto do regulamento aqui..." 
+              className="w-full bg-white/5 border border-white/10 text-white rounded-[1.5rem] p-5 mb-8 h-48 outline-none focus:ring-2 focus:ring-white/20 text-sm resize-none whitespace-pre-wrap leading-relaxed relative z-10 custom-scrollbar placeholder-white/30" 
+              value={estatutoText} 
+              onChange={(e) => setEstatutoText(e.target.value)} 
+            />
+            
+            <button 
+              onClick={handleAtualizarEstatuto} 
+              disabled={carregando}
+              className="w-full bg-[#eaf3de] hover:bg-white text-[#1d2a13] font-black py-4 rounded-[1.5rem] transition-colors shadow-lg flex justify-center items-center gap-2 relative z-10 disabled:opacity-50"
+            >
+              {carregando ? 'Salvando...' : 'ATUALIZAR ESTATUTO DO PARQUE'}
+            </button>
+            <ShieldCheck className="absolute -right-10 -bottom-10 text-white/5" size={200} />
+          </section>
+
+          <section className="bg-white p-8 rounded-[2rem] shadow-sm border border-transparent hover:border-[#4a5937]/20 transition-all">
+            <div className="flex items-center justify-between gap-4 mb-6">
+              <div className="flex items-center gap-4">
+                <div className="bg-[#e4eed7] p-3 rounded-2xl text-[#4a5937]"><Users size={24} /></div>
+                <h2 className="text-xl font-black text-[#1d2a13] uppercase tracking-tight">Relatorio de Usuarios</h2>
               </div>
-              <label className="block border-2 border-dashed border-[#435334]/20 p-6 rounded-2xl cursor-pointer text-center hover:bg-white/50 mb-6 relative">
-                {preview ? <img src={preview} className="max-h-40 mx-auto rounded-xl shadow-lg" alt="preview" /> : <div className="py-4 opacity-40"><Camera size={32} className="mx-auto" /></div>}
-                <input type="file" className="hidden" accept="image/*" onChange={handleFileChange} />
-              </label>
-              <button onClick={handlePublicarObra} disabled={carregando} className="w-full bg-[#435334] text-white font-black py-4 rounded-2xl hover:bg-[#2d3a22] transition-all disabled:opacity-50 flex items-center justify-center gap-2 shadow-lg shadow-[#435334]/20">
-                {carregando ? <Loader2 className="animate-spin" /> : 'PUBLICAR OBRA'} <ArrowRight size={18} />
+              <button
+                onClick={carregarUsuarios}
+                className="bg-[#f4f7ef] hover:bg-[#e4eed7] text-[#4a5937] px-4 py-2 rounded-full text-[10px] font-black uppercase tracking-widest transition-colors"
+              >
+                Atualizar
               </button>
-            </section>
+            </div>
 
-            <section className="bg-white/90 backdrop-blur-xl p-8 rounded-[2.5rem] shadow-2xl border border-white/50">
-               <div className="flex items-center gap-3 mb-6">
-                <div className="bg-[#435334] p-2 rounded-xl text-white"><Megaphone size={20} /></div>
-                <h2 className="text-xl font-black text-[#435334] uppercase tracking-tight">Novo Comunicado</h2>
-              </div>
-              <input type="text" placeholder="Título" className="w-full bg-slate-50 rounded-xl p-4 mb-4 font-bold outline-none border border-slate-100" value={tituloAviso} onChange={(e) => setTituloAviso(e.target.value)} />
-              <textarea placeholder="Mensagem para o mural..." className="w-full bg-slate-50 rounded-xl p-4 mb-4 h-24 outline-none border border-slate-100" value={msgAviso} onChange={(e) => setMsgAviso(e.target.value)} />
-              <label className="flex items-center gap-3 p-4 bg-red-50/50 rounded-2xl cursor-pointer mb-6 border border-red-100">
-                <input type="checkbox" checked={isUrgente} onChange={(e) => setIsUrgente(e.target.checked)} className="w-5 h-5 accent-red-600" />
-                <span className="font-black text-red-600 text-[10px] uppercase tracking-widest">Aviso Urgente 🚨</span>
-              </label>
-              <button onClick={handlePublicarAviso} className="w-full bg-slate-800 text-white font-black py-4 rounded-2xl hover:bg-black transition-all shadow-lg">POSTAR AVISO</button>
-            </section>
-          </div>
-
-          {/* COLUNA DIREITA (GESTÃO) */}
-          <div className="lg:col-span-7 space-y-6">
-            <h3 className="flex items-center gap-2 text-white font-black text-xs uppercase tracking-[0.3em] ml-4"><Clock size={16} /> Monitoramento em Tempo Real</h3>
-
-            <div className="space-y-4 max-h-[85vh] overflow-y-auto pr-2 custom-scrollbar">
-              {/* MAPEAMENTO DE OBRAS */}
-              {galeria.map((obraItem) => (
-                <div key={obraItem.id} className="bg-white/95 p-6 rounded-[2rem] shadow-xl relative animate-in fade-in slide-in-from-right-4 border border-white/20">
-                  <button onClick={() => deletarObra(obraItem.id)} className="absolute top-4 right-4 p-2 text-slate-300 hover:text-red-500 transition-colors">
-                    <Trash2 size={18} />
+            <div className="mb-6">
+              <div className="relative">
+                <input
+                  type="text"
+                  placeholder="Pesquisar por nome ou email..."
+                  value={pesquisaUsuario}
+                  onChange={(e) => setPesquisaUsuario(e.target.value)}
+                  className="w-full bg-[#f4f7ef] border border-[#e4eed7] rounded-xl px-12 py-3 text-sm outline-none focus:ring-2 focus:ring-[#4a5937]/20 transition-all"
+                />
+                <div className="absolute left-3 top-1/2 text-[#4a5937]/40" style={{ transform: 'translateY(-50%)' }}>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <circle cx="11" cy="11" r="8"></circle>
+                    <path d="m21 21-4.35-4.35"></path>
+                  </svg>
+                </div>
+                {pesquisaUsuario && (
+                  <button
+                    onClick={() => setPesquisaUsuario('')}
+                    className="absolute right-3 top-1/2 text-[#4a5937]/40 hover:text-[#4a5937] transition-colors"
+                    style={{ transform: 'translateY(-50%)' }}
+                  >
+                    <XCircle size={16} />
                   </button>
-                  <div className="flex gap-6 items-start">
-                    <img src={obraItem.imagem_url} className="w-24 h-24 rounded-2xl object-cover shadow-md" alt="obra" />
-                    <div className="flex-1">
-                      <div className="flex justify-between mb-2 pr-6">
-                        <span className="text-[10px] font-black text-[#435334] uppercase tracking-widest">Progresso: {obraItem.progresso}%</span>
-                        <div className="flex items-center gap-1 text-[10px] font-black text-red-500 uppercase tracking-widest">
-                           <Heart size={10} fill="currentColor" /> {obraItem.likes?.length || 0} Curtidas
+                )}
+              </div>
+              {pesquisaUsuario && (
+                <div className="mt-2 text-xs text-[#4a5937]/60">
+                  {usuariosFiltrados.length} resultado(s) encontrado(s)
+                </div>
+              )}
+            </div>
+
+            {pesquisaUsuario && (
+              <div className="space-y-3 max-h-[420px] overflow-y-auto pr-1">
+                {erroUsuarios ? (
+                  <div className="mb-3 bg-red-50 border border-red-200 text-red-700 text-xs font-bold rounded-xl px-4 py-3">
+                    {erroUsuarios}
+                  </div>
+                ) : null}
+                {carregandoUsuarios ? (
+                  <div className="py-10 flex items-center justify-center text-[#4a5937]">
+                    <Loader2 className="animate-spin" size={20} />
+                  </div>
+                ) : usuariosFiltrados.length === 0 ? (
+                  <p className="text-sm text-[#2c3f1d]/50 italic">
+                    Nenhum usuário encontrado para esta pesquisa.
+                  </p>
+                ) : (
+                  usuariosFiltrados.map((usuario) => (
+                    <div key={usuario.id} className="bg-[#f8fbf3] rounded-2xl p-4 border border-[#e4eed7]">
+                      <div className="flex items-start justify-between gap-4">
+                        <div className="min-w-0 flex-1">
+                          <p className="font-black text-sm text-[#1d2a13] truncate">{usuario.nome || 'Morador sem nome'}</p>
+                          <p className="text-xs text-[#2c3f1d]/70 mt-1 break-all">{usuario.email}</p>
+                          <p className="text-[10px] text-[#4a5937]/70 font-bold uppercase tracking-widest mt-2">
+                            Chacara: {usuario.chacara || 'Nao informada'}
+                          </p>
                         </div>
-                      </div>
-
-                      {/* BARRA DE PROGRESSO EDITÁVEL SEM DELAY */}
-                      <input
-                        type="range"
-                        min="0"
-                        max="100"
-                        value={obraItem.progresso}
-                        onChange={(e) => {
-                          const novoV = Number(e.target.value);
-                          setGaleria(prev => prev.map(oItem =>
-                            oItem.id === obraItem.id ? { ...oItem, progresso: novoV } : oItem
-                          ));
-                        }}
-                        onMouseUp={(e: any) => atualizarProgressoNoBanco(obraItem.id, Number(e.target.value))}
-                        className="w-full h-2 bg-slate-100 rounded-full appearance-none cursor-pointer accent-green-600 mb-3"
-                      />
-
-                      <p className="text-xs text-slate-500 font-medium mb-4">{obraItem.descricao}</p>
-
-                      {/* COMENTÁRIOS DOS MORADORES */}
-                      <div className="bg-slate-50 rounded-2xl p-4 border border-slate-100">
-                        <p className="text-[8px] font-black text-slate-400 uppercase mb-3 tracking-[0.2em]">Feedback dos Moradores</p>
-                        <div className="space-y-2 max-h-24 overflow-y-auto">
-                          {obraItem.comentarios_obras?.length > 0 ? obraItem.comentarios_obras.map((c: any) => (
-                            <div key={c.id} className="text-[10px] leading-tight flex flex-col gap-0.5">
-                              <span className="font-bold text-[#435334] uppercase text-[9px]">{c.usuario_nome}:</span>
-                              <span className="text-slate-600 italic">"{c.texto}"</span>
-                            </div>
-                          )) : <p className="text-[10px] text-slate-300 italic">Nenhum comentário ainda.</p>}
+                        <div className="flex gap-2 shrink-0">
+                          <button
+                            onClick={() => enviarResetSenha(usuario.email)}
+                            disabled={!usuario.email || resetandoEmail === usuario.email}
+                            className="flex items-center gap-2 bg-[#1d2a13] hover:bg-black text-white px-3 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest disabled:opacity-50"
+                          >
+                            {resetandoEmail === usuario.email ? <Loader2 size={12} className="animate-spin" /> : <Mail size={12} />}
+                            Resetar
+                          </button>
+                          <button
+                            onClick={() => excluirUsuario(usuario.id, usuario.nome || 'Morador', usuario.email)}
+                            disabled={excluindoUsuario === usuario.id}
+                            className="flex items-center gap-2 bg-red-500 hover:bg-red-600 text-white px-3 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest disabled:opacity-50"
+                          >
+                            {excluindoUsuario === usuario.id ? <Loader2 size={12} className="animate-spin" /> : <Trash2 size={12} />}
+                            Excluir
+                          </button>
                         </div>
                       </div>
                     </div>
+                  ))
+                )}
+              </div>
+            )}
+          </section>
+
+          {/* Usuários Logados em Tempo Real */}
+          <section className="bg-white p-8 rounded-[2rem] shadow-sm border border-transparent hover:border-[#4a5937]/20 transition-all">
+            <div className="flex items-center justify-between gap-4 mb-8">
+              <div className="flex items-center gap-4">
+                <div className="bg-[#dbeaeb] p-3 rounded-2xl text-[#4a5937]"><Users size={24} /></div>
+                <h2 className="text-xl font-black text-[#1d2a13] uppercase tracking-tight">Usuários Logados</h2>
+                <span className="bg-[#e4eed7] text-[#4a5937] px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-[0.2em] border border-[#d0dfbb]">
+                  {sessoesAtivas.length} Online
+                </span>
+              </div>
+              <button
+                onClick={carregarSessoesAtivas}
+                className="bg-[#f4f7ef] hover:bg-[#e4eed7] text-[#4a5937] px-4 py-2 rounded-full text-[10px] font-black uppercase tracking-widest transition-colors"
+              >
+                Atualizar
+              </button>
+            </div>
+
+            <div className="space-y-3 max-h-[300px] overflow-y-auto pr-1">
+              {erroSessoes ? (
+                <div className="mb-3 bg-red-50 border border-red-200 text-red-700 text-xs font-bold rounded-xl px-4 py-3">
+                  {erroSessoes}
+                </div>
+              ) : null}
+              {carregandoSessoes ? (
+                <div className="py-10 flex items-center justify-center text-[#4a5937]">
+                  <Loader2 className="animate-spin" size={20} />
+                </div>
+              ) : (
+                <>
+                  {sessoesAtivas && sessoesAtivas.length > 0 ? (
+                    sessoesAtivas.map((sessao) => (
+                      <div key={sessao.id} className="bg-[#f8fbf3] rounded-2xl p-4 border border-[#e4eed7] relative mb-4">
+                        <div className="absolute top-2 right-2">
+                          <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
+                        </div>
+                        <div className="flex items-start justify-between gap-4">
+                          <div className="min-w-0 flex-1">
+                            <p className="font-black text-sm text-[#1d2a13] truncate">{sessao.user_name || 'Usuário'}</p>
+                            <p className="text-xs text-[#2c3f1d]/70 mt-1 break-all">{sessao.user_email || 'Email não disponível'}</p>
+                            <div className="flex items-center gap-4 mt-2 text-[10px] text-[#4a5937]/70">
+                              <span className="font-bold uppercase tracking-widest">
+                                Entrou: {sessao.inicio_sessao ? new Date(sessao.inicio_sessao).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : 'N/A'}
+                              </span>
+                              <span className="font-bold uppercase tracking-widest">
+                                Última atividade: {sessao.ultima_atividade ? new Date(sessao.ultima_atividade).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : 'N/A'}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <p className="text-sm text-[#2c3f1d]/50 italic">Nenhum usuário logado no momento.</p>
+                  )}
+                </>
+              )}
+            </div>
+          </section>
+        </div>
+
+        {/* COLUNA DIREITA (GESTÃO E MONITORAMENTO LIVE) */}
+        <div className="lg:col-span-8 space-y-6 animate-in fade-in slide-in-from-right-8 duration-700 delay-100">
+          <div className="flex items-center gap-3 mb-8 px-2">
+            <Clock size={20} className="text-[#4a5937]" />
+            <h3 className="font-black text-sm uppercase tracking-[0.3em] text-[#4a5937]">Monitoramento em Tempo Real</h3>
+          </div>
+
+          <div className="space-y-6">
+            
+            {/* OBRAS ATIVAS MAPPING */}
+            {galeria.map((obraItem) => (
+              <div key={obraItem.id} className="bg-white p-6 rounded-[2rem] shadow-sm relative border border-transparent hover:border-[#4a5937]/10 transition-all flex flex-col md:flex-row gap-6 items-start">
+                
+                <button onClick={() => deletarObra(obraItem.id)} className="absolute top-4 right-4 p-3 bg-red-50 text-red-400 hover:text-white hover:bg-red-500 rounded-xl transition-all shadow-sm">
+                  <Trash2 size={16} />
+                </button>
+                
+                <img src={obraItem.imagem_url} className="w-full md:w-48 md:h-48 rounded-[1.5rem] object-cover shadow-md" alt="obra" />
+                
+                <div className="flex-1 w-full mt-2 md:mt-0">
+                  <div className="flex justify-between mb-4 pr-14">
+                    <span className="inline-block bg-[#e4eed7] text-[#4a5937] px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-[0.2em] border border-[#d0dfbb]">
+                      {obraItem.progresso}% Concluída
+                    </span>
+                    <div className="flex items-center gap-1.5 text-[10px] font-black text-red-500 uppercase tracking-widest bg-red-50 px-3 py-1 rounded-full">
+                       <Heart size={12} fill="currentColor" /> {obraItem.likes?.length || 0}
+                    </div>
+                  </div>
+
+                  <p className="text-sm font-medium text-[#2c3f1d] leading-relaxed mb-6">{obraItem.descricao}</p>
+
+                  <div className="mb-6">
+                    <label className="text-[9px] font-black text-[#2c3f1d]/50 uppercase tracking-widest mb-2 block">Ajuste de Progresso Manual:</label>
+                    <input
+                      type="range"
+                      min="0"
+                      max="100"
+                      value={obraItem.progresso}
+                      onChange={(e) => {
+                        const novoV = Number(e.target.value);
+                        setGaleria(prev => prev.map(oItem =>
+                          oItem.id === obraItem.id ? { ...oItem, progresso: novoV } : oItem
+                        ));
+                      }}
+                      onMouseUp={(e: any) => atualizarProgressoNoBanco(obraItem.id, Number(e.target.value))}
+                      className="w-full h-2 bg-[#f4f7ef] rounded-full appearance-none cursor-pointer accent-[#4a5937]"
+                    />
+                  </div>
+
+                  {/* Comentários Feedback */}
+                  <div className="bg-[#f4f7ef] rounded-[1.5rem] p-5">
+                    <p className="text-[9px] font-black text-[#4a5937]/60 uppercase mb-3 tracking-[0.2em] flex items-center gap-2">
+                       <Megaphone size={12}/> Feedback dos Moradores
+                    </p>
+                    <div className="space-y-3 max-h-32 overflow-y-auto pr-2">
+                      {obraItem.comentarios_obras?.length > 0 ? obraItem.comentarios_obras.map((c: any) => (
+                        <div key={c.id} className="text-[11px] leading-tight flex flex-col gap-1 pb-3 border-b border-[#4a5937]/10 last:border-0 last:pb-0">
+                          <span className="font-black text-[#1d2a13] uppercase tracking-wide">{c.usuario_nome}</span>
+                          <span className="text-[#2c3f1d]/80 italic">"{c.texto}"</span>
+                        </div>
+                      )) : <p className="text-[10px] text-[#4a5937]/40 font-medium italic">Nenhum comentário recebido ainda.</p>}
+                    </div>
                   </div>
                 </div>
-              ))}
+              </div>
+            ))}
 
-              {/* MAPEAMENTO DE AVISOS */}
-              {avisos.map((avisoItem) => (
-                <div key={avisoItem.id} className={`bg-white/95 p-6 rounded-[2rem] shadow-xl border-l-[10px] relative ${avisoItem.urgente ? 'border-red-500' : 'border-[#435334]'}`}>
-                  <button onClick={() => deletarAviso(avisoItem.id)} className="absolute top-4 right-4 p-2 text-slate-300 hover:text-red-500 transition-colors">
-                    <Trash2 size={18} />
-                  </button>
-                  <h4 className="font-black text-[#435334] uppercase text-sm mb-1">{avisoItem.titulo}</h4>
-                  <p className="text-xs text-slate-500 font-medium leading-relaxed">{avisoItem.conteudo}</p>
+            {/* AVISOS MAPPING */}
+            {avisos.map((avisoItem) => (
+              <div key={avisoItem.id} className={`bg-white p-6 rounded-[2rem] shadow-sm border-l-[6px] relative flex items-start gap-4 ${avisoItem.urgente ? 'border-l-red-500 bg-red-50/30' : 'border-l-[#4a5937]'}`}>
+                <div className={`p-4 rounded-2xl ${avisoItem.urgente ? 'bg-red-100 text-red-600' : 'bg-[#e4eed7] text-[#4a5937]'}`}>
+                   <Megaphone size={20} />
                 </div>
-              ))}
-            </div>
+                <div className="flex-1 pt-1 pr-12">
+                  <h4 className="font-black text-[#1d2a13] uppercase text-[13px] mb-2">{avisoItem.titulo}</h4>
+                  <p className="text-xs text-[#2c3f1d]/70 font-medium leading-relaxed">{avisoItem.conteudo}</p>
+                </div>
+                <button onClick={() => deletarAviso(avisoItem.id)} className="absolute top-6 right-6 p-2 text-red-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors">
+                  <Trash2 size={18} />
+                </button>
+              </div>
+            ))}
+            
           </div>
-        </main>
-      </div>
+        </div>
+      </main>
     </div>
   );
 }
