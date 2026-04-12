@@ -24,26 +24,34 @@ export default function Dashboard() {
 
   // Função para curtir/descurtir obra
   const toggleLike = async (obraId: string) => {
-    if (!perfil) return;
-
-    const obra = obras.find(o => o.id === obraId);
-    if (!obra) return;
-
-    const likes = obra.likes || [];
-    const usuarioId = perfil.id;
-    const jaCurtiu = likes.includes(usuarioId);
-
-    // Atualizar localmente imediatamente
-    const novosLikes = jaCurtiu 
-      ? likes.filter((id: string) => id !== usuarioId)
-      : [...likes, usuarioId];
-
-    setObras(prev => prev.map(o => 
-      o.id === obraId ? { ...o, likes: novosLikes } : o
-    ));
-
-    // Atualizar no banco
     try {
+      if (!perfil) {
+        console.log('Usuário não logado');
+        return;
+      }
+
+      const obra = obras.find(o => o.id === obraId);
+      if (!obra) {
+        console.log('Obra não encontrada:', obraId);
+        return;
+      }
+
+      const likes = obra.likes || [];
+      const usuarioId = perfil.id;
+      const jaCurtiu = likes.includes(usuarioId);
+
+      console.log('Tentando curtir obra:', obraId, 'Já curtiu:', jaCurtiu);
+
+      // Atualizar localmente imediatamente
+      const novosLikes = jaCurtiu 
+        ? likes.filter((id: string) => id !== usuarioId)
+        : [...likes, usuarioId];
+
+      setObras(prev => prev.map(o => 
+        o.id === obraId ? { ...o, likes: novosLikes } : o
+      ));
+
+      // Atualizar no banco
       const { error } = await supabase
         .from('obras')
         .update({ likes: novosLikes })
@@ -55,12 +63,15 @@ export default function Dashboard() {
         setObras(prev => prev.map(o => 
           o.id === obraId ? { ...o, likes: likes } : o
         ));
+      } else {
+        console.log('Likes atualizados com sucesso:', novosLikes.length);
       }
     } catch (error) {
       console.error('Erro ao curtir obra:', error);
       // Reverter em caso de erro
+      const obraOriginal = obras.find(o => o.id === obraId);
       setObras(prev => prev.map(o => 
-        o.id === obraId ? { ...o, likes: likes } : o
+        o.id === obraId ? { ...o, likes: obraOriginal?.likes || [] } : o
       ));
     }
   };
@@ -90,11 +101,29 @@ export default function Dashboard() {
       }
 
       // Buscar obras e posts simultaneamente
-      const { data: listaObras } = await supabase.from('obras').select('*').order('created_at', { ascending: false });
-      if (listaObras) setObras(listaObras);
+      try {
+        console.log('Buscando obras...');
+        const { data: listaObras, error: errorObras } = await supabase.from('obras').select('*').order('created_at', { ascending: false });
+        
+        if (errorObras) {
+          console.error('Erro ao buscar obras:', errorObras);
+        } else {
+          console.log('Obras encontradas:', listaObras?.length || 0);
+          if (listaObras) setObras(listaObras);
+        }
 
-      const { data: listaPosts } = await supabase.from('posts').select('*').neq('autor', 'ESTATUTO').order('created_at', { ascending: false });
-      if (listaPosts) setPosts(listaPosts);
+        console.log('Buscando posts...');
+        const { data: listaPosts, error: errorPosts } = await supabase.from('posts').select('*').neq('autor', 'ESTATUTO').order('created_at', { ascending: false });
+        
+        if (errorPosts) {
+          console.error('Erro ao buscar posts:', errorPosts);
+        } else {
+          console.log('Posts encontrados:', listaPosts?.length || 0);
+          if (listaPosts) setPosts(listaPosts);
+        }
+      } catch (error) {
+        console.error('Erro geral ao carregar dados:', error);
+      }
     }
     
     fetchData();
