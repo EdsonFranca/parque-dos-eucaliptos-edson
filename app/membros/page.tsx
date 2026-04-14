@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@supabase/supabase-js';
 import { LogOut, Bot, Bell, ShieldCheck, MapPin, Search, Sparkles, Heart, MessageCircle, Send, CheckCircle2 } from 'lucide-react';
+import Header from '@/components/Header';
 
 // Cliente fora do componente evita o erro de múltiplas instâncias no console
 const supabase = createClient(
@@ -139,21 +140,11 @@ const limparZelador = () => {
     <div className="min-h-screen bg-[url('https://unsplash.com')] bg-cover bg-fixed bg-center text-slate-900">
       <div className="min-h-screen bg-black/40 backdrop-blur-[2px] p-4 md:p-8">
 
-        {/* HEADER */}
-        <header className="max-w-6xl mx-auto mb-8 flex justify-between items-center bg-white/80 backdrop-blur-md p-5 rounded-[2rem] shadow-2xl border border-white/20">
-          <div className="flex items-center gap-4">
-            <div className="w-14 h-14 rounded-2xl border-2 border-[#435334] overflow-hidden">
-              <img src={perfil?.foto || 'https://dicebear.com'} className="w-full h-full object-cover" />
-            </div>
-            <div>
-              <h1 className="text-lg font-black text-[#435334]">Olá, {perfil?.nome || 'Morador'}</h1>
-              <p className="text-[10px] font-bold text-[#435334]/60 uppercase tracking-widest">Unidade {perfil?.apto}</p>
-            </div>
-          </div>
-          <button onClick={() => { supabase.auth.signOut(); router.push('/'); }} className="p-3 bg-red-500/10 text-red-600 rounded-2xl hover:bg-red-500 hover:text-white transition-all">
-            <LogOut size={20} />
-          </button>
-        </header>
+        <Header
+          title={`Olá, ${perfil?.nome || 'Morador'}`}
+          showNavigation={false}
+          onLogout={() => { supabase.auth.signOut(); router.push('/'); }}
+        />
 
         <main className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8">
 

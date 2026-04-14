@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { Search, Calendar, History, Bookmark, Settings, MessageSquare, Lightbulb, Droplets, AlertCircle, Bot, CheckCircle2, LogOut, Megaphone, FileText, Heart } from "lucide-react";
 import { createClient } from '@supabase/supabase-js';
 import FaleComSindicoFloating from '@/components/FaleComSindicoFloating';
+import Header from '@/components/Header';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -278,31 +279,11 @@ export default function Dashboard() {
       {/* 75% LEFT DASHBOARD */}
       <div className="flex-1 flex flex-col h-full overflow-y-auto">
         
-        {/* Navbar */}
-        <header className="flex items-center justify-between px-10 py-6 shrink-0">
-          <div className="flex items-center gap-10">
-            <h1 className="text-xl font-bold flex items-center gap-2">Parque dos Eucaliptos</h1>
-            
-            <nav className="hidden md:flex gap-6 text-sm font-medium text-[#2c3f1d] items-center">
-              <button onClick={() => setAbaAtiva('dashboard')} className={`${abaAtiva === 'dashboard' ? 'border-b-[3px] border-[#2c3f1d] font-bold' : 'text-black/50 hover:text-black'} transition-colors pb-1`}>Dashboard</button>
-              <button onClick={() => setAbaAtiva('estatuto')} className={`${abaAtiva === 'estatuto' ? 'border-b-[3px] border-[#2c3f1d] font-bold' : 'text-black/50 hover:text-black'} transition-colors pb-1`}>Estatuto do Parque</button>
-              <a href="#" className="text-black/50 hover:text-black transition-colors pb-1">Transparência</a>
-              <a href="#" className="text-black/50 hover:text-black transition-colors pb-1">Agendas</a>
-              <button onClick={handleLogout} className="text-red-700/60 hover:text-red-700 transition-colors pb-1 flex items-center gap-2 font-bold ml-4">
-                <LogOut size={14} /> Sair
-              </button>
-            </nav>
-          </div>
-
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 text-gray-400" size={16} style={{transform: "translateY(-50%)"}} />
-            <input 
-              type="text" 
-              placeholder="Busca" 
-              className="bg-white rounded-full py-2 pl-10 pr-4 text-sm font-medium w-64 shadow-sm border-none outline-none focus:ring-2 focus:ring-[#2c3f1d]/20" 
-            />
-          </div>
-        </header>
+        <Header
+          activeTab={abaAtiva}
+          onTabChange={setAbaAtiva}
+          onLogout={handleLogout}
+        />
 
         {/* Dashboard Main Content */}
         {abaAtiva === 'dashboard' ? (
