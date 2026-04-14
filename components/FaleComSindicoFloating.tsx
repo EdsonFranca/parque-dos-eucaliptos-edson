@@ -87,7 +87,7 @@ const supabase = createClient(
        href={href}
        target="_blank"
        rel="noreferrer"
-       className="fixed bottom-6 right-6 z-50 group"
+       className="fixed bottom-6 left-6 z-50 group"
        aria-label="Falar com o síndico no WhatsApp"
      >
        <div className="flex items-center gap-3 rounded-full bg-[#25D366] text-white px-5 py-4 shadow-2xl shadow-black/30 border border-white/20 backdrop-blur-md transition-transform group-hover:scale-[1.03] active:scale-[0.98]">

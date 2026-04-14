@@ -3,7 +3,6 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Search, Calendar, History, Bookmark, Settings, MessageSquare, Lightbulb, Droplets, AlertCircle, Bot, CheckCircle2, LogOut, Megaphone, FileText, Heart } from "lucide-react";
 import { createClient } from '@supabase/supabase-js';
-import FaleComSindicoFloating from '@/components/FaleComSindicoFloating';
 import Header from '@/components/Header';
 
 const supabase = createClient(
@@ -22,6 +21,10 @@ export default function Dashboard() {
   const [estatutoTexto, setEstatutoTexto] = useState<string | null>(null);
   const [obras, setObras] = useState<any[]>([]);
   const [posts, setPosts] = useState<any[]>([]);
+
+  const numeroWhatsApp = process.env.NEXT_PUBLIC_SINDICO_WHATSAPP_NUMERO?.replace(/\D/g, '') || '';
+  const mensagemWhatsApp = `Olá${perfil?.nome ? `, sou ${perfil.nome}` : ''}, gostaria de falar com o síndico.`;
+  const hrefWhatsApp = numeroWhatsApp ? `https://wa.me/${numeroWhatsApp}?text=${encodeURIComponent(mensagemWhatsApp)}` : '';
 
   // Função para buscar dados (movida para fora do useEffect)
   const fetchData = async () => {
@@ -274,8 +277,6 @@ export default function Dashboard() {
 
   return (
     <div className="flex h-screen bg-[#eaf3de] text-[#2c3f1d] font-sans overflow-hidden">
-      <FaleComSindicoFloating />
-      
       {/* 75% LEFT DASHBOARD */}
       <div className="flex-1 flex flex-col h-full overflow-y-auto">
         
@@ -509,7 +510,7 @@ export default function Dashboard() {
       </div>
 
       {/* 25% RIGHT SIDEBAR (Digital Janitor) */}
-      <aside className="w-[320px] lg:w-[360px] shrink-0 bg-[#eaf4dd] h-full flex flex-col p-8 pb-28 border-l border-white overflow-y-auto">
+      <aside className="w-[300px] lg:w-[320px] shrink-0 bg-[#eaf4dd] h-full flex flex-col p-8 pb-8 border-l border-white overflow-y-auto">
         
         {/* Profile */}
         <div className="flex items-center gap-4 mb-8">
@@ -578,6 +579,20 @@ export default function Dashboard() {
                <MessageSquare size={16}/> {carregandoIA ? 'Consultando...' : 'Enviar Pergunta'}
             </button>
           </form>
+
+          {hrefWhatsApp && (
+            <div className="mt-5">
+              <a
+                href={hrefWhatsApp}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex w-full items-center justify-center gap-2 rounded-[1.5rem] border border-[#4f8a50] bg-[#d7f5d4] px-4 py-3 text-sm font-semibold text-[#14632f] shadow-sm transition-colors hover:bg-[#c6ecbe]"
+              >
+                <MessageSquare size={16} />
+                Fale com o síndico no WhatsApp
+              </a>
+            </div>
+          )}
         </div>
 
       </aside>
