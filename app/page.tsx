@@ -144,7 +144,7 @@ export default function HomePage() {
               <span className="inline-block bg-[#4a5937]/10 text-[#4a5937] px-4 py-1.5 rounded-full text-[9px] font-black uppercase tracking-[0.2em] mb-6 border border-[#4a5937]/20">
                 Portal de Acesso
               </span>
-              <h2 className="text-4xl font-black mb-3 text-[#1d2a13]">TESTE DE CONEXÃO</h2>
+              <h2 className="text-4xl font-black mb-3 text-[#1d2a13]">Parque Dos Eucaliptos</h2>
               <p className="text-sm text-[#2c3f1d]/60 font-medium">Selecione o seu perfil para entrar no sistema do condomínio.</p>
             </div>
 
