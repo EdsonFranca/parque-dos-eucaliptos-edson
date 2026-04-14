@@ -75,16 +75,29 @@ export default function MuralMembros() {
   };
 
   // --- LÓGICA DE CURTIDA ---
-  const handleLike = async (obraId: string, likesAtuais: string[]) => {
+  const handleLike = async (obraId: string, likesAtuais: any) => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return alert("Faça login para curtir!");
 
-    // Garante que likesAtuais seja um array
-    const listaLikes = likesAtuais || [];
+    // Tratar likes como array (formato correto)
+    let likes: string[] = [];
+    if (likesAtuais) {
+      if (Array.isArray(likesAtuais)) {
+        likes = likesAtuais;
+      } else if (typeof likesAtuais === 'string') {
+        // Se for string, tentar fazer parse do JSON
+        try {
+          const parsed = JSON.parse(likesAtuais);
+          likes = Array.isArray(parsed) ? parsed : [likesAtuais];
+        } catch {
+          likes = likesAtuais ? [likesAtuais] : [];
+        }
+      }
+    }
 
-    if (listaLikes.includes(user.id)) return alert("Você já curtiu esta obra!");
+    if (likes.includes(user.id)) return alert("Você já curtiu esta obra!");
 
-    const novosLikes = [...listaLikes, user.id];
+    const novosLikes = [...likes, user.id];
     const { error } = await supabase.from('obras').update({ likes: novosLikes }).eq('id', obraId);
 
     if (!error) {
@@ -151,7 +164,25 @@ const limparZelador = () => {
               <h2 className="text-white font-black text-sm uppercase tracking-widest ml-4 flex items-center gap-2">
                 <ShieldCheck size={18} /> Acompanhamento de Obras
               </h2>
-              {obras.length > 0 ? obras.map(obra => (
+              {obras.length > 0 ? obras.map(obra => {
+                // Tratar likes como array (formato correto)
+                let likes: string[] = [];
+                if (obra.likes) {
+                  if (Array.isArray(obra.likes)) {
+                    likes = obra.likes;
+                  } else if (typeof obra.likes === 'string') {
+                    // Se for string, tentar fazer parse do JSON
+                    try {
+                      const parsed = JSON.parse(obra.likes);
+                      likes = Array.isArray(parsed) ? parsed : [obra.likes];
+                    } catch {
+                      likes = obra.likes ? [obra.likes] : [];
+                    }
+                  }
+                }
+                const usuarioCurtiu = perfil && likes.includes(perfil.id);
+
+                return (
                 <div key={obra.id} className="bg-white/95 backdrop-blur-md rounded-[2.5rem] shadow-2xl overflow-hidden border border-white/20 animate-in fade-in slide-in-from-bottom-4">
                   <img src={obra.imagem_url} className="w-full h-72 object-cover" alt="Obra" />
                   <div className="p-8">
@@ -165,8 +196,8 @@ const limparZelador = () => {
                     <p className="text-slate-700 font-medium mb-8 leading-relaxed">{obra.descricao}</p>
 
                     <div className="flex items-center gap-6 mb-8 pt-4 border-t border-slate-100">
-                      <button onClick={() => handleLike(obra.id, obra.likes)} className="flex items-center gap-2 text-red-500 font-bold hover:scale-110 transition-transform">
-                        <Heart size={20} fill={obra.likes?.length > 0 ? "currentColor" : "none"} /> {obra.likes?.length || 0}
+                      <button onClick={() => handleLike(obra.id, likes)} className="flex items-center gap-2 text-red-500 font-bold hover:scale-110 transition-transform">
+                        <Heart size={20} fill={usuarioCurtiu ? "currentColor" : "none"} /> {likes.length}
                       </button>
                       <div className="flex items-center gap-2 text-slate-400 font-bold">
                         <MessageCircle size={20} /> {obra.comentarios_obras?.length || 0} Comentários

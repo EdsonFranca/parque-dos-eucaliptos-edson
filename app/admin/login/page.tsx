@@ -35,36 +35,45 @@ export default function LoginAdmin() {
     setCarregando(true);
 
     try {
+      console.log('Iniciando login com:', email);
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password: senha,
       });
 
+      console.log('Resultado do signIn:', { data, error });
+
       if (error) {
+        console.error('Erro no signIn:', error);
         setErro("Email ou senha inválidos");
         setCarregando(false);
         return;
       }
 
       if (data?.user) {
+        console.log('Usuário autenticado, verificando perfil admin...');
         const { data: perfil, error: perfilError } = await supabase
           .from('perfis_moradores')
           .select('tipo_usuario')
           .eq('id', data.user.id)
           .single();
 
+        console.log('Verificação de perfil:', { perfil, perfilError });
+
         if (perfilError || perfil?.tipo_usuario !== 'admin') {
+          console.error('Acesso negado:', { perfilError, perfil });
           setErro("Acesso negado: você não é administrador.");
           await supabase.auth.signOut();
           setCarregando(false);
           return;
         }
 
+        console.log('Login bem-sucedido, redirecionando para dashboard...');
         router.push('/admin/dashboard');
       }
 
     } catch (err) {
-      console.error(err);
+      console.error('Erro no handleLogin:', err);
       setErro("Erro inesperado ao fazer login");
     } finally {
       setCarregando(false);

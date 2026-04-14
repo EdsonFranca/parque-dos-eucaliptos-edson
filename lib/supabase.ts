@@ -8,4 +8,11 @@ if (!supabaseUrl || !supabaseAnonKey) {
   console.warn('⚠️ Variáveis de ambiente do Supabase não encontradas. O cliente não conseguirá se conectar.');
 }
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+  auth: {
+    persistSession: true,
+    storageKey: 'parque-admin-auth',
+    autoRefreshToken: true,
+    detectSessionInUrl: true
+  }
+});

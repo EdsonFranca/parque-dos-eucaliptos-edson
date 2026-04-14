@@ -87,7 +87,7 @@ export default function LoginPage() {
         // Registrar sessão ativa para o painel do síndico
         try {
           console.log('Registrando sessão para:', data.user.email);
-          const sessaoResponse = await fetch('/api/admin/sessoes', {
+          const sessaoResponse = await fetch('/api/auth/registrar-sessao', {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',

@@ -36,7 +36,7 @@ async function isAdminRequest(request: Request) {
   if (authError || !authData.user) return { ok: false as const, status: 401 };
 
   const { data: perfilAdmin } = await serviceClient
-    .from('perfis')
+    .from('perfis_moradores')
     .select('tipo_usuario')
     .eq('id', authData.user.id)
     .single();
@@ -137,6 +137,13 @@ export async function DELETE(request: Request) {
       return NextResponse.json({ error: 'ID do usuário obrigatorio.' }, { status: 400 });
     }
 
+    // Obter email do usuário ANTES de excluir
+    console.log('Getting user email before deletion...');
+    const { data: usersList } = await auth.serviceClient.auth.admin.listUsers();
+    const userToDelete = usersList.users?.find(u => u.id === userId);
+    const userEmail = userToDelete?.email;
+    console.log('User email found:', userEmail);
+
     console.log('Attempting to delete user from Supabase Auth...');
     const { error } = await auth.serviceClient.auth.admin.deleteUser(userId);
 
@@ -146,7 +153,7 @@ export async function DELETE(request: Request) {
     }
 
     console.log('User deleted from Auth successfully');
-    
+
     // Também exclui o perfil do morador se existir
     console.log('Attempting to delete user profile...');
     const { error: profileError } = await auth.serviceClient
@@ -156,6 +163,21 @@ export async function DELETE(request: Request) {
 
     if (profileError) {
       console.warn('Error deleting profile (continuing):', profileError);
+    }
+
+    // Remove o email da tabela emails_permitidos se existir
+    if (userEmail) {
+      console.log('Removing email from emails_permitidos...');
+      const { error: emailError } = await auth.serviceClient
+        .from('emails_permitidos')
+        .delete()
+        .eq('email', userEmail);
+
+      if (emailError) {
+        console.warn('Error removing email from emails_permitidos (continuing):', emailError);
+      } else {
+        console.log('Email removed from emails_permitidos successfully');
+      }
     }
 
     console.log('User deletion completed successfully');

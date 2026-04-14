@@ -22,6 +22,56 @@ export default function Dashboard() {
   const [obras, setObras] = useState<any[]>([]);
   const [posts, setPosts] = useState<any[]>([]);
 
+  // Função para buscar dados (movida para fora do useEffect)
+  const fetchData = async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) {
+      router.push("/");
+      return;
+    }
+
+    const { data: perfilData } = await supabase
+      .from('perfis_moradores')
+      .select('*')
+      .eq('id', session.user.id)
+      .single();
+      
+    if (perfilData) {
+      setPerfil(perfilData);
+    }
+
+    // Buscar Estatuto Oficial
+    const { data: listaEstatuto } = await supabase.from('posts').select('*').eq('autor', 'ESTATUTO').order('created_at', { ascending: false }).limit(1);
+    if (listaEstatuto && listaEstatuto.length > 0) {
+      setEstatutoTexto(listaEstatuto[0].conteudo);
+    }
+
+    // Buscar obras e posts simultaneamente
+    try {
+      console.log('Buscando obras...');
+      const { data: listaObras, error: errorObras } = await supabase.from('obras').select('*').order('created_at', { ascending: false });
+      
+      if (errorObras) {
+        console.error('Erro ao buscar obras:', errorObras);
+      } else {
+        console.log('Obras encontradas:', listaObras?.length || 0);
+        if (listaObras) setObras(listaObras);
+      }
+
+      console.log('Buscando posts...');
+      const { data: listaPosts, error: errorPosts } = await supabase.from('posts').select('*').neq('autor', 'ESTATUTO').order('created_at', { ascending: false });
+      
+      if (errorPosts) {
+        console.error('Erro ao buscar posts:', errorPosts);
+      } else {
+        console.log('Posts encontrados:', listaPosts?.length || 0);
+        if (listaPosts) setPosts(listaPosts);
+      }
+    } catch (error) {
+      console.error('Erro geral ao carregar dados:', error);
+    }
+  };
+
   // Função para curtir/descurtir obra
   const toggleLike = async (obraId: string) => {
     try {
@@ -36,99 +86,122 @@ export default function Dashboard() {
         return;
       }
 
-      const likes = obra.likes || [];
+      // Padronizar likes como array de strings
+      let likes: string[] = [];
+      if (obra.likes) {
+        if (Array.isArray(obra.likes)) {
+          likes = obra.likes.filter((id: any) => typeof id === 'string');
+        } else if (typeof obra.likes === 'string') {
+          try {
+            const parsed = JSON.parse(obra.likes);
+            likes = Array.isArray(parsed) ? parsed.filter(id => typeof id === 'string') : [];
+          } catch {
+            likes = obra.likes ? [obra.likes] : [];
+          }
+        }
+      }
+      
       const usuarioId = perfil.id;
       const jaCurtiu = likes.includes(usuarioId);
 
       console.log('Tentando curtir obra:', obraId, 'Já curtiu:', jaCurtiu);
 
-      // Atualizar localmente imediatamente
+      // Atualizar no banco PRIMEIRO (evita multiplicação)
       const novosLikes = jaCurtiu 
-        ? likes.filter((id: string) => id !== usuarioId)
+        ? likes.filter(id => id !== usuarioId)
         : [...likes, usuarioId];
 
-      setObras(prev => prev.map(o => 
-        o.id === obraId ? { ...o, likes: novosLikes } : o
-      ));
-
-      // Atualizar no banco
       const { error } = await supabase
         .from('obras')
         .update({ likes: novosLikes })
-        .eq('id', obraId);
+        .eq('id', obraId)
+        .select(); // Retorna os dados atualizados
 
       if (error) {
         console.error('Erro ao atualizar likes:', error);
-        // Reverter em caso de erro
-        setObras(prev => prev.map(o => 
-          o.id === obraId ? { ...o, likes: likes } : o
-        ));
-      } else {
-        console.log('Likes atualizados com sucesso:', novosLikes.length);
+        return;
       }
+
+      console.log('Likes atualizados com sucesso:', novosLikes.length);
+      
+      // Atualizar estado local apenas após sucesso no banco
+      setObras(prev => prev.map(o => 
+        o.id === obraId ? { ...o, likes: novosLikes } : o
+      ));
     } catch (error) {
       console.error('Erro ao curtir obra:', error);
-      // Reverter em caso de erro
-      const obraOriginal = obras.find(o => o.id === obraId);
-      setObras(prev => prev.map(o => 
-        o.id === obraId ? { ...o, likes: obraOriginal?.likes || [] } : o
-      ));
     }
   };
 
   useEffect(() => {
-    async function fetchData() {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        router.push("/");
-        return;
-      }
-
-      const { data: perfilData } = await supabase
-        .from('perfis_moradores')
-        .select('*')
-        .eq('id', session.user.id)
-        .single();
-        
-      if (perfilData) {
-        setPerfil(perfilData);
-      }
-
-      // Buscar Estatuto Oficial
-      const { data: listaEstatuto } = await supabase.from('posts').select('*').eq('autor', 'ESTATUTO').order('created_at', { ascending: false }).limit(1);
-      if (listaEstatuto && listaEstatuto.length > 0) {
-        setEstatutoTexto(listaEstatuto[0].conteudo);
-      }
-
-      // Buscar obras e posts simultaneamente
-      try {
-        console.log('Buscando obras...');
-        const { data: listaObras, error: errorObras } = await supabase.from('obras').select('*').order('created_at', { ascending: false });
-        
-        if (errorObras) {
-          console.error('Erro ao buscar obras:', errorObras);
-        } else {
-          console.log('Obras encontradas:', listaObras?.length || 0);
-          if (listaObras) setObras(listaObras);
-        }
-
-        console.log('Buscando posts...');
-        const { data: listaPosts, error: errorPosts } = await supabase.from('posts').select('*').neq('autor', 'ESTATUTO').order('created_at', { ascending: false });
-        
-        if (errorPosts) {
-          console.error('Erro ao buscar posts:', errorPosts);
-        } else {
-          console.log('Posts encontrados:', listaPosts?.length || 0);
-          if (listaPosts) setPosts(listaPosts);
-        }
-      } catch (error) {
-        console.error('Erro geral ao carregar dados:', error);
-      }
-    }
-    
     fetchData();
-    const intervalo = setInterval(fetchData, 5000);
-    return () => clearInterval(intervalo);
+    
+    // Configurar Realtime para atualizações instantâneas das obras
+    const obrasSubscription = supabase
+      .channel('obras_changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*', // Escutar todos os eventos (INSERT, UPDATE, DELETE)
+          schema: 'public',
+          table: 'obras'
+        },
+        (payload) => {
+          console.log('Mudança em obras detectada:', payload);
+          
+          if (payload.eventType === 'UPDATE') {
+            // Atualizar apenas a obra modificada
+            setObras(prev => prev.map(obra => 
+              obra.id === payload.new.id ? { ...obra, ...payload.new } : obra
+            ));
+          } else if (payload.eventType === 'INSERT') {
+            // Adicionar nova obra no início
+            setObras(prev => [payload.new, ...prev]);
+          } else if (payload.eventType === 'DELETE') {
+            // Remover obra deletada
+            setObras(prev => prev.filter(obra => obra.id !== payload.old.id));
+          }
+        }
+      )
+      .subscribe();
+
+    // Polling otimizado para atualizações (evitar multiplicação)
+    const intervalo = setInterval(async () => {
+      console.log('Verificando atualizações...');
+      
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return;
+
+      // Buscar apenas obras atualizadas nos últimos 10 segundos
+      const dezSegundosAtras = new Date(Date.now() - 10000).toISOString();
+      const { data: obrasAtualizadas } = await supabase
+        .from('obras')
+        .select('id, likes, updated_at')
+        .gte('updated_at', dezSegundosAtras)
+        .order('updated_at', { ascending: false });
+
+      if (obrasAtualizadas && obrasAtualizadas.length > 0) {
+        console.log('Atualizando', obrasAtualizadas.length, 'obras');
+        setObras(prev => {
+          const novasObras = [...prev];
+          obrasAtualizadas.forEach(obraAtualizada => {
+            const index = novasObras.findIndex(o => o.id === obraAtualizada.id);
+            if (index !== -1) {
+              // Garantir que likes seja sempre um array
+              const likesNormalizados = obraAtualizada.likes ? 
+                (Array.isArray(obraAtualizada.likes) ? obraAtualizada.likes : []) : [];
+              novasObras[index] = { ...novasObras[index], ...obraAtualizada, likes: likesNormalizados };
+            }
+          });
+          return novasObras;
+        });
+      }
+    }, 5000); // Aumentado para 5 segundos para reduzir carga
+
+    return () => {
+      clearInterval(intervalo);
+      supabase.removeChannel(obrasSubscription);
+    };
   }, [router]);
 
   const perguntarZelador = async () => {
@@ -274,7 +347,20 @@ export default function Dashboard() {
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     {obras.length > 0 ? obras.map(obra => {
-                      const likes = obra.likes || [];
+                      // Padronizar likes como array de strings
+                      let likes: string[] = [];
+                      if (obra.likes) {
+                        if (Array.isArray(obra.likes)) {
+                          likes = obra.likes.filter((id: any) => typeof id === 'string');
+                        } else if (typeof obra.likes === 'string') {
+                          try {
+                            const parsed = JSON.parse(obra.likes);
+                            likes = Array.isArray(parsed) ? parsed.filter(id => typeof id === 'string') : [];
+                          } catch {
+                            likes = obra.likes ? [obra.likes] : [];
+                          }
+                        }
+                      }
                       const usuarioCurtiu = perfil && likes.includes(perfil.id);
                       
                       return (

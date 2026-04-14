@@ -10,12 +10,6 @@ const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 );
 
-// Lista de emails permitidos (hardcoded)
-const EMAILS_PERMITIDOS = [
-  { email: 'salarod01@gmail.com', nome: 'Salomão Rodrigues 01', chacara: 'Chácara 01' },
-  { email: 'salarod02@gmail.com', nome: 'Salomão Rodrigues 02', chacara: 'Chácara 02' },
-  { email: 'salarod03@gmail.com', nome: 'Salomão Rodrigues 03', chacara: 'Chácara 03' }
-];
 
 export default function CadastroPage() {
   const router = useRouter();
@@ -47,14 +41,40 @@ export default function CadastroPage() {
     }
   }, []);
 
-  const verificarEmailPermitido = (email: string) => {
-    const emailNormalizado = email.toLowerCase().trim();
-    return EMAILS_PERMITIDOS.some(item => item.email === emailNormalizado);
+  const verificarEmailPermitido = async (email: string) => {
+    try {
+      const response = await fetch('/api/auth/verificar-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email })
+      });
+      const data = await response.json();
+      return data.permitido;
+    } catch (error) {
+      console.error('Erro ao verificar email:', error);
+      return false;
+    }
   };
 
-  const obterDadosEmail = (email: string) => {
-    const emailNormalizado = email.toLowerCase().trim();
-    return EMAILS_PERMITIDOS.find(item => item.email === emailNormalizado);
+  const obterDadosEmail = async (email: string) => {
+    try {
+      const response = await fetch('/api/auth/verificar-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email })
+      });
+      const data = await response.json();
+      if (data.permitido && data.dados) {
+        return {
+          nome: data.dados.nome,
+          chacara: data.dados.chacara
+        };
+      }
+      return null;
+    } catch (error) {
+      console.error('Erro ao obter dados do email:', error);
+      return null;
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -82,7 +102,8 @@ export default function CadastroPage() {
     }
 
     // Verificar se email está na lista permitida
-    if (!verificarEmailPermitido(formData.email)) {
+    const emailPermitido = await verificarEmailPermitido(formData.email);
+    if (!emailPermitido) {
       setErro('Seu email não está autorizado para cadastro. Contate o síndico.');
       setCarregando(false);
       return;

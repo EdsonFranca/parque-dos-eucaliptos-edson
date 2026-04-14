@@ -2,16 +2,11 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { createClient } from '@supabase/supabase-js';
+import { supabase } from '@/lib/supabase';
 import {
   LogOut, Megaphone, HardHat, Camera, Trash2,
   ArrowRight, ShieldCheck, Clock, Loader2, Eraser, Heart, FileText, Users, Mail, XCircle
 } from 'lucide-react';
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
 
 export default function DashboardAdmin() {
   const [usuarios, setUsuarios] = useState<any[]>([]);
@@ -19,6 +14,7 @@ export default function DashboardAdmin() {
   const [erroUsuarios, setErroUsuarios] = useState('');
   const [pesquisaUsuario, setPesquisaUsuario] = useState('');
   const [usuariosFiltrados, setUsuariosFiltrados] = useState<any[]>([]);
+  const [mostrarTodos, setMostrarTodos] = useState(false);
   const [sessoesAtivas, setSessoesAtivas] = useState<any[]>([]);
   const [carregandoSessoes, setCarregandoSessoes] = useState(false);
   const [erroSessoes, setErroSessoes] = useState('');
@@ -69,6 +65,7 @@ export default function DashboardAdmin() {
   const filtrarUsuarios = (termo: string) => {
     if (!termo.trim()) {
       setUsuariosFiltrados([]);
+      setMostrarTodos(false);
       return;
     }
 
@@ -78,6 +75,7 @@ export default function DashboardAdmin() {
       (usuario.email && usuario.email.toLowerCase().includes(termoLower))
     );
     setUsuariosFiltrados(filtrados);
+    setMostrarTodos(false);
   };
 
   useEffect(() => {
@@ -172,42 +170,88 @@ export default function DashboardAdmin() {
 
   useEffect(() => {
     const checkAdmin = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
+      try {
+        console.log('Verificando sessão...');
+        const { data: { session } } = await supabase.auth.getSession();
 
-      if (!user) {
-        router.push('/admin/login');
-        return;
+        if (!session?.user) {
+          console.log('Nenhuma sessão encontrada, redirecionando para login');
+          router.push('/admin/login');
+          return;
+        }
+
+        console.log('Sessão encontrada, verificando perfil...', session.user.id);
+        const { data: perfil, error } = await supabase
+          .from('perfis_moradores')
+          .select('tipo_usuario')
+          .eq('id', session.user.id)
+          .single();
+
+        console.log('Resultado da verificação:', { perfil, error });
+
+        if (error) {
+          console.error('Erro ao verificar perfil:', error);
+          // Em caso de erro na verificação, não redirecionar ainda
+          // Pode ser um erro temporário
+          return;
+        }
+
+        if (!perfil) {
+          console.log('Perfil não encontrado para o usuário:', session.user.id);
+          router.push('/');
+          return;
+        }
+
+        if (perfil.tipo_usuario !== 'admin') {
+          console.log('Usuário não é admin:', perfil);
+          router.push('/');
+          return;
+        }
+
+        console.log('Perfil admin confirmado, carregando dados...');
+        
+        // Carregar dados em paralelo para melhor performance
+        const [obrasResult, postsResult] = await Promise.all([
+          supabase
+            .from('obras')
+            .select('*, comentarios_obras(*)')
+            .order('created_at', { ascending: false }),
+          supabase
+            .from('posts')
+            .select('*')
+            .neq('autor', 'ESTATUTO')
+            .order('created_at', { ascending: false })
+        ]);
+
+        if (obrasResult.data) setGaleria(obrasResult.data);
+        if (postsResult.data) setAvisos(postsResult.data);
+        
+        console.log('Dados carregados com sucesso');
+        setLoading(false);
+        
+        // Carregar dados adicionais sem bloquear
+        carregarUsuarios();
+        carregarSessoesAtivas();
+        
+      } catch (error) {
+        console.error('Erro no checkAdmin:', error);
+        setLoading(false);
       }
-
-      const { data: perfil, error } = await supabase
-        .from('perfis_moradores')
-        .select('tipo_usuario')
-        .eq('id', user.id)
-        .single();
-
-      if (error || perfil?.tipo_usuario !== 'admin') {
-        router.push('/');
-        return;
-      }
-
-      const { data: listaObras } = await supabase
-        .from('obras')
-        .select('*, comentarios_obras(*)')
-        .order('created_at', { ascending: false });
-      if (listaObras) setGaleria(listaObras);
-
-      const { data: listaPosts } = await supabase
-        .from('posts')
-        .select('*')
-        .neq('autor', 'ESTATUTO')
-        .order('created_at', { ascending: false });
-      if (listaPosts) setAvisos(listaPosts);
-      setLoading(false);
-      carregarUsuarios();
-      carregarSessoesAtivas();
     };
 
     checkAdmin();
+
+    // Listener para mudanças na sessão
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        if (event === 'SIGNED_OUT') {
+          router.push('/admin/login');
+        }
+        // Não fazer nada em SIGNED_IN ou TOKEN_REFRESHED para evitar loops
+      }
+    );
+
+    return () => subscription.unsubscribe();
   }, [router]);
 
   useEffect(() => {
@@ -215,10 +259,10 @@ export default function DashboardAdmin() {
   }, []);
 
   useEffect(() => {
-    if (!pesquisaUsuario) {
+    if (!pesquisaUsuario && !mostrarTodos) {
       setUsuariosFiltrados([]);
     }
-  }, [pesquisaUsuario]);
+  }, [pesquisaUsuario, mostrarTodos]);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -502,12 +546,24 @@ export default function DashboardAdmin() {
                 <div className="bg-[#e4eed7] p-3 rounded-2xl text-[#4a5937]"><Users size={24} /></div>
                 <h2 className="text-xl font-black text-[#1d2a13] uppercase tracking-tight">Relatorio de Usuarios</h2>
               </div>
-              <button
-                onClick={carregarUsuarios}
-                className="bg-[#f4f7ef] hover:bg-[#e4eed7] text-[#4a5937] px-4 py-2 rounded-full text-[10px] font-black uppercase tracking-widest transition-colors"
-              >
-                Atualizar
-              </button>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => {
+                    setPesquisaUsuario(''); // Limpa o campo
+                    setMostrarTodos(true); // Ativa o modo "ver todos"
+                    setUsuariosFiltrados(usuarios); // Carrega todos os usuários
+                  }}
+                  className="bg-[#4a5937] hover:bg-[#323d24] text-white px-4 py-2 rounded-full text-[10px] font-black uppercase tracking-widest transition-colors"
+                >
+                  Ver Todos
+                </button>
+                <button
+                  onClick={carregarUsuarios}
+                  className="bg-[#f4f7ef] hover:bg-[#e4eed7] text-[#4a5937] px-4 py-2 rounded-full text-[10px] font-black uppercase tracking-widest transition-colors"
+                >
+                  Atualizar
+                </button>
+              </div>
             </div>
 
             <div className="mb-6">
@@ -542,7 +598,7 @@ export default function DashboardAdmin() {
               )}
             </div>
 
-            {pesquisaUsuario && (
+            {(pesquisaUsuario || mostrarTodos) && (
               <div className="space-y-3 max-h-[420px] overflow-y-auto pr-1">
                 {erroUsuarios ? (
                   <div className="mb-3 bg-red-50 border border-red-200 text-red-700 text-xs font-bold rounded-xl px-4 py-3">
@@ -553,12 +609,12 @@ export default function DashboardAdmin() {
                   <div className="py-10 flex items-center justify-center text-[#4a5937]">
                     <Loader2 className="animate-spin" size={20} />
                   </div>
-                ) : usuariosFiltrados.length === 0 ? (
+                ) : (pesquisaUsuario && usuariosFiltrados.length === 0) ? (
                   <p className="text-sm text-[#2c3f1d]/50 italic">
                     Nenhum usuário encontrado para esta pesquisa.
                   </p>
                 ) : (
-                  usuariosFiltrados.map((usuario) => (
+                  (mostrarTodos ? usuarios : usuariosFiltrados).map((usuario) => (
                     <div key={usuario.id} className="bg-[#f8fbf3] rounded-2xl p-4 border border-[#e4eed7]">
                       <div className="flex items-start justify-between gap-4">
                         <div className="min-w-0 flex-1">
@@ -680,7 +736,15 @@ export default function DashboardAdmin() {
                       {obraItem.progresso}% Concluída
                     </span>
                     <div className="flex items-center gap-1.5 text-[10px] font-black text-red-500 uppercase tracking-widest bg-red-50 px-3 py-1 rounded-full">
-                       <Heart size={12} fill="currentColor" /> {obraItem.likes?.length || 0}
+                       <Heart size={12} fill="currentColor" /> {
+                         (() => {
+                           if (!obraItem.likes) return 0;
+                           if (Array.isArray(obraItem.likes)) {
+                             return obraItem.likes.filter((id: any) => typeof id === 'string').length;
+                           }
+                           return 1;
+                         })()
+                       }
                     </div>
                   </div>
 
