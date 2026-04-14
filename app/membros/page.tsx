@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type FormEvent, type KeyboardEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@supabase/supabase-js';
 import { LogOut, Bot, Bell, ShieldCheck, MapPin, Search, Sparkles, Heart, MessageCircle, Send, CheckCircle2 } from 'lucide-react';
@@ -249,19 +249,36 @@ const limparZelador = () => {
                   <span className="text-[9px] font-bold text-[#435334]/40 uppercase tracking-widest">Inteligência Artificial</span>
                 </div>
               </div>
-              <textarea
-                className="w-full bg-white/50 border-2 border-[#435334]/5 rounded-2xl p-4 text-sm mb-4 h-32 outline-none focus:border-[#435334]/20 transition-all resize-none shadow-inner"
-                placeholder="Qual sua dúvida sobre as regras?"
-                value={pergunta}
-                onChange={(e) => setPergunta(e.target.value)}
-              />
-              <button
-                onClick={perguntarZelador}
-                disabled={carregandoIA}
-                className="w-full bg-[#435334] text-white font-black py-5 rounded-2xl hover:bg-[#2d3a22] transition-all flex items-center justify-center gap-3 shadow-lg shadow-[#435334]/20 disabled:opacity-50"
+              <form
+                onSubmit={(e: FormEvent<HTMLFormElement>) => {
+                  e.preventDefault();
+                  if (!carregandoIA && pergunta.trim()) {
+                    perguntarZelador();
+                  }
+                }}
               >
+                <textarea
+                  className="w-full bg-white/50 border-2 border-[#435334]/5 rounded-2xl p-4 text-sm mb-4 h-32 outline-none focus:border-[#435334]/20 transition-all resize-none shadow-inner"
+                  placeholder="Qual sua dúvida sobre as regras?"
+                  value={pergunta}
+                  onChange={(e) => setPergunta(e.target.value)}
+                  onKeyDown={(e: KeyboardEvent<HTMLTextAreaElement>) => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                      e.preventDefault();
+                      if (!carregandoIA && pergunta.trim()) {
+                        perguntarZelador();
+                      }
+                    }
+                  }}
+                />
+                <button
+                  type="submit"
+                  disabled={carregandoIA}
+                  className="w-full bg-[#435334] text-white font-black py-5 rounded-2xl hover:bg-[#2d3a22] transition-all flex items-center justify-center gap-3 shadow-lg shadow-[#435334]/20 disabled:opacity-50"
+                >
                 {carregandoIA ? 'Consultando...' : 'ENVIAR PERGUNTA'} <Search size={18} />
-              </button>
+                </button>
+              </form>
               {resposta && (
                 <div className="mt-6 p-5 bg-white/80 rounded-2xl border border-[#435334]/10 animate-in fade-in slide-in-from-top-2 shadow-sm">
                   <p className="text-[10px] font-black text-[#435334]/40 uppercase mb-2 tracking-widest flex items-center gap-2">

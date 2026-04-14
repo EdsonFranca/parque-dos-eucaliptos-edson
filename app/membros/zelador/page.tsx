@@ -94,6 +94,14 @@ export default function ZeladorChat() {
                 <input
                   value={pergunta}
                   onChange={(e) => setPergunta(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      if (!carregando && pergunta.trim()) {
+                        handleEnviar();
+                      }
+                    }
+                  }}
                   placeholder="Ex: Qual o horário de silêncio no domingo?"
                   className="w-full bg-white border-2 border-[#435334]/5 rounded-[2rem] p-6 text-sm font-medium outline-none focus:border-[#435334]/30 transition-all shadow-inner pr-16"
                 />
