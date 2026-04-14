@@ -1,7 +1,7 @@
 # 🌳 Parque dos Eucaliptos
 
 **Plataforma de Gestão e Comunidade Inteligente** para o conjunto de chácaras Parque dos Eucaliptos.  
-Construído com uma arquitetura moderna ("Green Stack") baseada no Next.js, com foco em alta performance, transparência administrativa e inteligência artificial de **Custo Zero** de Infraestrutura.
+Construído com uma arquitetura moderna ("Green Stack") baseada no Next.js, com foco em alta performance, transparência administrativa e inteligência artificial de **Custo Zero** de Infraestrutura..
 
 ![Next.js](https://img.shields.io/badge/Next.js-16+-black?style=for-the-badge&logo=next.js)
 ![Tailwind](https://img.shields.io/badge/Tailwind_CSS-v4-38B2AC?style=for-the-badge&logo=tailwind-css)

@@ -226,7 +226,7 @@ const limparZelador = () => {
                     </div>
                   </div>
                 </div>
-              )) : (
+              )}) : (
                 <p className="text-white/40 italic ml-4 text-sm">Nenhuma obra em andamento.</p>
               )}
             </section>

@@ -86,7 +86,6 @@ export default function Dashboard() {
         return;
       }
 
-<<<<<<< HEAD
       // Padronizar likes como array de strings
       let likes: string[] = [];
       if (obra.likes) {
@@ -95,39 +94,26 @@ export default function Dashboard() {
         } else if (typeof obra.likes === 'string') {
           try {
             const parsed = JSON.parse(obra.likes);
-            likes = Array.isArray(parsed) ? parsed.filter(id => typeof id === 'string') : [];
+            likes = Array.isArray(parsed) ? parsed.filter((id: any) => typeof id === 'string') : [];
           } catch {
             likes = obra.likes ? [obra.likes] : [];
           }
         }
       }
-      
-=======
-      const likes = obra.likes || [];
->>>>>>> 14adcd0253e6bba7dd8b9f77156390bdfa07418c
+
       const usuarioId = perfil.id;
       const jaCurtiu = likes.includes(usuarioId);
 
       console.log('Tentando curtir obra:', obraId, 'Já curtiu:', jaCurtiu);
 
-<<<<<<< HEAD
-      // Atualizar no banco PRIMEIRO (evita multiplicação)
-      const novosLikes = jaCurtiu 
+      const novosLikes = jaCurtiu
         ? likes.filter(id => id !== usuarioId)
         : [...likes, usuarioId];
 
-=======
-      // Atualizar localmente imediatamente
-      const novosLikes = jaCurtiu 
-        ? likes.filter((id: string) => id !== usuarioId)
-        : [...likes, usuarioId];
-
-      setObras(prev => prev.map(o => 
+      setObras(prev => prev.map(o =>
         o.id === obraId ? { ...o, likes: novosLikes } : o
       ));
 
-      // Atualizar no banco
->>>>>>> 14adcd0253e6bba7dd8b9f77156390bdfa07418c
       const { error } = await supabase
         .from('obras')
         .update({ likes: novosLikes })
@@ -136,90 +122,23 @@ export default function Dashboard() {
 
       if (error) {
         console.error('Erro ao atualizar likes:', error);
-<<<<<<< HEAD
-        return;
-=======
-        // Reverter em caso de erro
-        setObras(prev => prev.map(o => 
-          o.id === obraId ? { ...o, likes: likes } : o
+        setObras(prev => prev.map(o =>
+          o.id === obraId ? { ...o, likes } : o
         ));
-      } else {
-        console.log('Likes atualizados com sucesso:', novosLikes.length);
->>>>>>> 14adcd0253e6bba7dd8b9f77156390bdfa07418c
+        return;
       }
 
       console.log('Likes atualizados com sucesso:', novosLikes.length);
-      
-      // Atualizar estado local apenas após sucesso no banco
-      setObras(prev => prev.map(o => 
-        o.id === obraId ? { ...o, likes: novosLikes } : o
-      ));
     } catch (error) {
       console.error('Erro ao curtir obra:', error);
-<<<<<<< HEAD
-=======
-      // Reverter em caso de erro
       const obraOriginal = obras.find(o => o.id === obraId);
-      setObras(prev => prev.map(o => 
+      setObras(prev => prev.map(o =>
         o.id === obraId ? { ...o, likes: obraOriginal?.likes || [] } : o
       ));
->>>>>>> 14adcd0253e6bba7dd8b9f77156390bdfa07418c
     }
   };
 
   useEffect(() => {
-<<<<<<< HEAD
-=======
-    async function fetchData() {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        router.push("/");
-        return;
-      }
-
-      const { data: perfilData } = await supabase
-        .from('perfis_moradores')
-        .select('*')
-        .eq('id', session.user.id)
-        .single();
-        
-      if (perfilData) {
-        setPerfil(perfilData);
-      }
-
-      // Buscar Estatuto Oficial
-      const { data: listaEstatuto } = await supabase.from('posts').select('*').eq('autor', 'ESTATUTO').order('created_at', { ascending: false }).limit(1);
-      if (listaEstatuto && listaEstatuto.length > 0) {
-        setEstatutoTexto(listaEstatuto[0].conteudo);
-      }
-
-      // Buscar obras e posts simultaneamente
-      try {
-        console.log('Buscando obras...');
-        const { data: listaObras, error: errorObras } = await supabase.from('obras').select('*').order('created_at', { ascending: false });
-        
-        if (errorObras) {
-          console.error('Erro ao buscar obras:', errorObras);
-        } else {
-          console.log('Obras encontradas:', listaObras?.length || 0);
-          if (listaObras) setObras(listaObras);
-        }
-
-        console.log('Buscando posts...');
-        const { data: listaPosts, error: errorPosts } = await supabase.from('posts').select('*').neq('autor', 'ESTATUTO').order('created_at', { ascending: false });
-        
-        if (errorPosts) {
-          console.error('Erro ao buscar posts:', errorPosts);
-        } else {
-          console.log('Posts encontrados:', listaPosts?.length || 0);
-          if (listaPosts) setPosts(listaPosts);
-        }
-      } catch (error) {
-        console.error('Erro geral ao carregar dados:', error);
-      }
-    }
-    
->>>>>>> 14adcd0253e6bba7dd8b9f77156390bdfa07418c
     fetchData();
     
     // Configurar Realtime para atualizações instantâneas das obras
