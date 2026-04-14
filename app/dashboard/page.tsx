@@ -548,19 +548,36 @@ export default function Dashboard() {
 
         {/* Input Area */}
         <div className="mt-8 pt-8 border-t border-[#2c3f1d]/10">
-          <textarea 
-             className="w-full bg-white border-none rounded-[1.5rem] p-5 text-xs outline-none focus:ring-2 focus:ring-[#4a5937]/20 transition-all resize-none shadow-sm mb-4 h-24 text-black"
-             placeholder="Escreva sua pergunta aqui..."
-             value={pergunta}
-             onChange={(e) => setPergunta(e.target.value)}
-          />
-          <button 
-             onClick={perguntarZelador}
-             disabled={carregandoIA}
-             className="w-full bg-[#4a5937] hover:bg-[#323d24] text-white py-4 rounded-[1.5rem] flex items-center justify-center gap-2 text-sm font-bold shadow-lg transition-transform active:scale-[0.98] disabled:opacity-50"
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              if (!carregandoIA && pergunta.trim()) {
+                perguntarZelador();
+              }
+            }}
           >
-             <MessageSquare size={16}/> {carregandoIA ? 'Consultando...' : 'Enviar Pergunta'}
-          </button>
+            <textarea
+               className="w-full bg-white border-none rounded-[1.5rem] p-5 text-xs outline-none focus:ring-2 focus:ring-[#4a5937]/20 transition-all resize-none shadow-sm mb-4 h-24 text-black"
+               placeholder="Escreva sua pergunta aqui..."
+               value={pergunta}
+               onChange={(e) => setPergunta(e.target.value)}
+               onKeyDown={(e) => {
+                 if (e.key === 'Enter' && !e.shiftKey) {
+                   e.preventDefault();
+                   if (!carregandoIA && pergunta.trim()) {
+                     perguntarZelador();
+                   }
+                 }
+               }}
+            />
+            <button
+               type="submit"
+               disabled={carregandoIA}
+               className="w-full bg-[#4a5937] hover:bg-[#323d24] text-white py-4 rounded-[1.5rem] flex items-center justify-center gap-2 text-sm font-bold shadow-lg transition-transform active:scale-[0.98] disabled:opacity-50"
+            >
+               <MessageSquare size={16}/> {carregandoIA ? 'Consultando...' : 'Enviar Pergunta'}
+            </button>
+          </form>
         </div>
 
       </aside>
