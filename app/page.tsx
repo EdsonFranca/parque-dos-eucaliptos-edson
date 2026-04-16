@@ -96,17 +96,17 @@ export default function HomePage() {
   if (!hasMounted) return <div className="min-h-screen bg-[#eaf3de]" />;
 
   return (
-    <div className="flex h-screen bg-[#eaf3de] text-[#2c3f1d] font-sans overflow-hidden">
+    <div className="flex min-h-screen bg-[#eaf3de] text-[#2c3f1d] font-sans overflow-auto">
       
       {/* 50% LEFT - HERO IMAGE */}
-      <div className="hidden lg:block w-1/2 relative bg-[#2c3f1d]">
+      <div className="hidden lg:flex w-1/2 relative bg-[#2c3f1d] items-center justify-center">
         <img 
           src="https://images.unsplash.com/photo-1542273917363-3b1817f69a2d?q=80&w=2074&auto=format&fit=crop" 
           className="absolute inset-0 w-full h-full object-cover mix-blend-overlay opacity-80"
           alt="Floresta"
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-[#1d2a13] via-[#2c3f1d]/40 to-transparent flex flex-col justify-end p-16">
-          <div className="mb-8">
+        <div className="absolute inset-0 bg-gradient-to-t from-[#1d2a13] via-[#2c3f1d]/40 to-transparent flex flex-col justify-center p-12">
+          <div className="max-w-lg mx-auto">
             <div className="bg-white/20 backdrop-blur-md w-16 h-16 rounded-2xl flex items-center justify-center mb-6 border border-white/20 shadow-xl">
                <TreePine className="text-white" size={32} />
             </div>
@@ -121,9 +121,9 @@ export default function HomePage() {
       </div>
 
       {/* 50% RIGHT - LOGIN ACTIONS */}
-      <div className="flex-1 flex flex-col h-full relative">
+      <div className="flex-1 flex flex-col min-h-screen relative">
          
-         <header className="flex items-center justify-end px-10 py-8 shrink-0">
+         <header className="flex items-center justify-end px-4 py-4 lg:px-10 lg:py-8 shrink-0">
             {/* Status da IA Superior */}
             <div className="bg-white/50 backdrop-blur-md px-4 py-2 rounded-full border border-white flex items-center gap-2 shadow-sm transition-all animate-in fade-in slide-in-from-top-4">
               {statusIA.includes('Erro') ? (
@@ -139,8 +139,8 @@ export default function HomePage() {
             </div>
          </header>
 
-         <main className="flex-1 flex flex-col items-center justify-center px-10 pb-20 max-w-md mx-auto w-full">
-            <div className="text-center mb-12 w-full animate-in fade-in slide-in-from-bottom-4 duration-700">
+         <main className="flex-1 flex flex-col items-center justify-start pt-10 px-4 pb-8 md:px-10 max-w-md mx-auto w-full">
+            <div className="text-center mb-8 md:mb-10 w-full animate-in fade-in slide-in-from-bottom-4 duration-700">
               <span className="inline-block bg-[#4a5937]/10 text-[#4a5937] px-4 py-1.5 rounded-full text-[9px] font-black uppercase tracking-[0.2em] mb-6 border border-[#4a5937]/20">
                 Portal de Acesso
               </span>
@@ -148,14 +148,14 @@ export default function HomePage() {
               <p className="text-sm text-[#2c3f1d]/60 font-medium">Selecione o seu perfil para entrar no sistema do condomínio.</p>
             </div>
 
-            <div className="w-full space-y-3 animate-in fade-in slide-in-from-bottom-8 duration-700 delay-150">
+            <div className="w-full space-y-3 md:space-y-4 animate-in fade-in slide-in-from-bottom-8 duration-700 delay-150">
                
                {/* Botão Morador */}
                <button
                  onClick={() => router.push('/membros/login')}
-                 className="group relative w-full bg-white p-6 rounded-[2rem] shadow-sm hover:shadow-xl transition-all hover:-translate-y-1 border border-white hover:border-[#4a5937]/20 overflow-hidden flex items-center gap-6"
+                 className="group relative w-full bg-white p-4 md:p-5 rounded-[2rem] shadow-sm hover:shadow-xl transition-all hover:-translate-y-1 border border-white hover:border-[#4a5937]/20 overflow-hidden flex items-center gap-3 md:gap-4"
                >
-                 <div className="bg-[#eaf4df] p-4 rounded-2xl text-[#4a5937] group-hover:scale-110 group-hover:bg-[#4a5937] group-hover:text-white transition-all">
+                 <div className="bg-[#eaf4df] p-3 rounded-2xl text-[#4a5937] group-hover:scale-110 group-hover:bg-[#4a5937] group-hover:text-white transition-all">
                    <Users size={24} />
                  </div>
                  <div className="text-left flex-1">
@@ -170,9 +170,9 @@ export default function HomePage() {
                {/* Botão Síndico */}
                <button
                  onClick={() => router.push('/admin/login')}
-                 className="group relative w-full bg-[#1d2a13] p-6 rounded-[2rem] shadow-xl hover:shadow-2xl transition-all hover:-translate-y-1 border border-[#1d2a13] overflow-hidden flex items-center gap-6"
+                 className="group relative w-full bg-[#1d2a13] p-4 md:p-5 rounded-[2rem] shadow-xl hover:shadow-2xl transition-all hover:-translate-y-1 border border-[#1d2a13] overflow-hidden flex items-center gap-3 md:gap-4"
                >
-                 <div className="bg-white/10 p-4 rounded-2xl text-white group-hover:scale-110 transition-transform">
+                 <div className="bg-white/10 p-3 rounded-2xl text-white group-hover:scale-110 transition-transform">
                    <ShieldCheck size={24} />
                  </div>
                  <div className="text-left flex-1">
@@ -187,9 +187,9 @@ export default function HomePage() {
                {/* Botão Cadastro */}
                <button
                  onClick={() => setMostrarPopupCadastro(true)}
-                 className="group relative w-full bg-transparent border-2 border-dashed border-[#4a5937]/30 p-5 rounded-[2rem] hover:border-[#4a5937]/60 hover:bg-[#4a5937]/5 transition-all overflow-hidden flex items-center gap-6"
+                 className="group relative w-full bg-transparent border-2 border-dashed border-[#4a5937]/30 p-3 md:p-4 rounded-[2rem] hover:border-[#4a5937]/60 hover:bg-[#4a5937]/5 transition-all overflow-hidden flex items-center gap-3 md:gap-4"
                >
-                 <div className="bg-[#e4eed7] p-4 rounded-2xl text-[#4a5937] group-hover:scale-110 group-hover:bg-[#4a5937] group-hover:text-white transition-all">
+                 <div className="bg-[#e4eed7] p-3 rounded-2xl text-[#4a5937] group-hover:scale-110 group-hover:bg-[#4a5937] group-hover:text-white transition-all">
                    <Sparkles size={24} />
                  </div>
                  <div className="text-left flex-1">
@@ -204,7 +204,7 @@ export default function HomePage() {
             </div>
 
             {/* Footer */}
-            <footer className="mt-16 text-center">
+            <footer className="mt-8 md:mt-12 text-center">
               <p className="text-[#2c3f1d]/40 text-[9px] font-black uppercase tracking-[0.3em]">
                 Residencial Premium • 2026
               </p>
