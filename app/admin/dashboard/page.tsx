@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import {
   LogOut, Megaphone, HardHat, Camera, Trash2,
-  ArrowRight, ShieldCheck, Clock, Loader2, Eraser, Heart, FileText, Users, Mail, XCircle
+  ArrowRight, ShieldCheck, Clock, Loader2, Eraser, Heart, FileText, Users, Mail, XCircle, Upload, Plus, Search, RefreshCcw as Reload
 } from 'lucide-react';
 
 export default function DashboardAdmin() {
@@ -31,6 +31,14 @@ export default function DashboardAdmin() {
   const [isUrgente, setIsUrgente] = useState(false);
   const [carregando, setCarregando] = useState(false);
   const [carregandoPDF, setCarregandoPDF] = useState(false);
+  const [emailPermitidoManual, setEmailPermitidoManual] = useState('');
+  const [nomePermitidoManual, setNomePermitidoManual] = useState('');
+  const [chacaraPermitidoManual, setChacaraPermitidoManual] = useState('');
+  const [emailsPermitidos, setEmailsPermitidos] = useState<any[]>([]);
+  const [pesquisaEmailsPermitidos, setPesquisaEmailsPermitidos] = useState('');
+  const [carregandoEmailsPermitidosList, setCarregandoEmailsPermitidosList] = useState(false);
+  const [carregandoEmailsPermitidos, setCarregandoEmailsPermitidos] = useState(false);
+  const [mensagemEmailsPermitidos, setMensagemEmailsPermitidos] = useState('');
   const [hasMounted, setHasMounted] = useState(false);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
@@ -324,6 +332,158 @@ export default function DashboardAdmin() {
     }
   };
 
+  const isValidEmail = (email: string) => {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
+  };
+
+  const extractEmailsFromText = (text: string) => {
+    const matches = text.match(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g) || [];
+    return Array.from(new Set(matches.map((email) => email.toLowerCase().trim())));
+  };
+
+  const carregarEmailsPermitidos = async (query = '') => {
+    setCarregandoEmailsPermitidosList(true);
+    try {
+      const headers = await getAuthHeader();
+      if (!headers) return;
+
+      const url = new URL('/api/admin/emails-permitidos', window.location.origin);
+      if (query) url.searchParams.set('q', query.trim());
+
+      const res = await fetch(url.toString(), { headers });
+      const data = await res.json();
+      if (!res.ok) {
+        console.error(data.error || 'Erro ao carregar emails permitidos');
+        return;
+      }
+      setEmailsPermitidos(data.emails || []);
+    } catch (err) {
+      console.error('Erro ao carregar emails permitidos:', err);
+    } finally {
+      setCarregandoEmailsPermitidosList(false);
+    }
+  };
+
+  const enviarEmailsPermitidos = async (emails: { email: string; nome?: string | null; chacara?: string | null }[]) => {
+    if (!emails.length) return false;
+    setCarregandoEmailsPermitidos(true);
+    setMensagemEmailsPermitidos('');
+
+    try {
+      const headers = await getAuthHeader();
+      if (!headers) {
+        alert('Sessão inválida. Faça login novamente.');
+        return false;
+      }
+
+      const res = await fetch('/api/admin/emails-permitidos', {
+        method: 'POST',
+        headers: { ...headers, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ emails }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        alert(data.error || 'Erro ao salvar emails permitidos.');
+        return false;
+      }
+
+      setMensagemEmailsPermitidos(`✅ ${data.count} email(s) permitidos adicionados ou atualizados com sucesso.`);
+      setEmailPermitidoManual('');
+      setNomePermitidoManual('');
+      setChacaraPermitidoManual('');
+      await carregarEmailsPermitidos();
+      return true;
+    } catch (err) {
+      alert('Erro de conexão ao salvar emails permitidos.');
+      return false;
+    } finally {
+      setCarregandoEmailsPermitidos(false);
+    }
+  };
+
+  const handleAdicionarEmailPermitido = async () => {
+    const email = emailPermitidoManual.trim().toLowerCase();
+
+    if (!email) {
+      alert('Digite um email válido para adicionar.');
+      return;
+    }
+
+    if (!isValidEmail(email)) {
+      alert('Formato de email inválido.');
+      return;
+    }
+
+    await enviarEmailsPermitidos([
+      {
+        email,
+        nome: nomePermitidoManual.trim() || null,
+        chacara: chacaraPermitidoManual.trim() || null,
+      },
+    ]);
+  };
+
+  const handleImportarEmailsPermitidos = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const arquivo = e.target.files?.[0];
+    if (!arquivo) return;
+
+    setCarregandoEmailsPermitidos(true);
+    setMensagemEmailsPermitidos('');
+
+    try {
+      const ext = arquivo.name.split('.').pop()?.toLowerCase();
+      let texto = '';
+
+      if (ext === 'pdf') {
+        const formData = new FormData();
+        formData.append('file', arquivo);
+
+        const res = await fetch('/api/extrair-pdf', {
+          method: 'POST',
+          body: formData,
+        });
+
+        const data = await res.json();
+        if (!res.ok) {
+          alert(data.error || 'Erro ao extrair texto do PDF.');
+          return;
+        }
+
+        texto = data.texto || '';
+      } else if (ext === 'txt') {
+        texto = await new Promise<string>((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(reader.result as string);
+          reader.onerror = () => reject(new Error('Falha ao ler o arquivo TXT.'));
+          reader.readAsText(arquivo, 'UTF-8');
+        });
+      } else {
+        alert('Apenas arquivos PDF ou TXT são aceitos.');
+        return;
+      }
+
+      const emails = extractEmailsFromText(texto);
+      if (!emails.length) {
+        alert('Nenhum email válido encontrado no arquivo.');
+        return;
+      }
+
+      await enviarEmailsPermitidos(emails.map((email) => ({ email })));
+    } catch (err) {
+      alert('Erro ao importar a lista de emails permitidos.');
+    } finally {
+      setCarregandoEmailsPermitidos(false);
+      if (e.target) e.target.value = '';
+    }
+  };
+
+  useEffect(() => {
+    if (hasMounted && !loading) {
+      carregarEmailsPermitidos();
+    }
+  }, [hasMounted, loading]);
+
   const handleAtualizarEstatuto = async () => {
     if (!estatutoText) return alert("Extraia ou digite o texto do estatuto!");
     setCarregando(true);
@@ -538,6 +698,144 @@ export default function DashboardAdmin() {
               {carregando ? 'Salvando...' : 'ATUALIZAR ESTATUTO DO PARQUE'}
             </button>
             <ShieldCheck className="absolute -right-10 -bottom-10 text-white/5" size={200} />
+          </section>
+
+          <section className="bg-white p-8 rounded-[2rem] shadow-sm border border-transparent hover:border-[#4a5937]/20 transition-all">
+            <div className="flex items-center gap-4 mb-6">
+              <div className="bg-[#e4eed7] p-3 rounded-2xl text-[#4a5937]"><Upload size={24} /></div>
+              <div>
+                <h2 className="text-xl font-black text-[#1d2a13] uppercase tracking-tight">Emails Permitidos</h2>
+                <p className="text-[10px] text-[#2c3f1d]/70 uppercase tracking-[0.2em]">Gerencie autorizações de cadastro</p>
+              </div>
+            </div>
+
+            <div className="grid gap-4 sm:grid-cols-3 mb-4">
+              <label className="sm:col-span-3 block">
+                <span className="text-[10px] font-black text-[#2c3f1d]/70 uppercase tracking-[0.2em] mb-2 block">Email autorizado</span>
+                <input
+                  type="email"
+                  placeholder="nome@exemplo.com"
+                  value={emailPermitidoManual}
+                  onChange={(e) => setEmailPermitidoManual(e.target.value)}
+                  className="w-full bg-[#f4f7ef] border border-[#e4eed7] rounded-[1.5rem] px-5 py-4 text-sm outline-none focus:ring-2 focus:ring-[#4a5937]/20"
+                />
+              </label>
+              <label>
+                <span className="text-[10px] font-black text-[#2c3f1d]/70 uppercase tracking-[0.2em] mb-2 block">Nome (opcional)</span>
+                <input
+                  type="text"
+                  placeholder="Nome do autorizado"
+                  value={nomePermitidoManual}
+                  onChange={(e) => setNomePermitidoManual(e.target.value)}
+                  className="w-full bg-[#f4f7ef] border border-[#e4eed7] rounded-[1.5rem] px-5 py-4 text-sm outline-none focus:ring-2 focus:ring-[#4a5937]/20"
+                />
+              </label>
+              <label>
+                <span className="text-[10px] font-black text-[#2c3f1d]/70 uppercase tracking-[0.2em] mb-2 block">Chácara (opcional)</span>
+                <input
+                  type="text"
+                  placeholder="Chácara / Unidade"
+                  value={chacaraPermitidoManual}
+                  onChange={(e) => setChacaraPermitidoManual(e.target.value)}
+                  className="w-full bg-[#f4f7ef] border border-[#e4eed7] rounded-[1.5rem] px-5 py-4 text-sm outline-none focus:ring-2 focus:ring-[#4a5937]/20"
+                />
+              </label>
+            </div>
+
+            <button
+              onClick={handleAdicionarEmailPermitido}
+              disabled={carregandoEmailsPermitidos}
+              className="w-full bg-[#4a5937] hover:bg-[#323d24] text-white font-black py-4 rounded-[1.5rem] transition-colors shadow-lg flex items-center justify-center gap-2 disabled:opacity-50"
+            >
+              <Plus size={16} />
+              {carregandoEmailsPermitidos ? 'Adicionando...' : 'Adicionar Email Permitido'}
+            </button>
+
+            <div className="mt-8 border-t border-[#e4eed7] pt-6">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-3">
+                <div>
+                  <p className="text-sm font-black text-[#1d2a13] uppercase tracking-tight">Importar lista de emails</p>
+                  <p className="text-[10px] text-[#2c3f1d]/60 mt-1">Envie um arquivo PDF ou TXT com emails para autorizar cadastramentos.</p>
+                </div>
+                <label className="flex items-center gap-2 bg-[#4a5937] hover:bg-[#323d24] text-white px-4 py-3 rounded-full cursor-pointer text-xs font-black uppercase tracking-widest transition-colors shadow-sm">
+                  <Upload size={14} />
+                  {carregandoEmailsPermitidos ? 'Importando...' : 'Selecionar PDF / TXT'}
+                  <input
+                    type="file"
+                    accept=".pdf,.txt"
+                    className="hidden"
+                    onChange={handleImportarEmailsPermitidos}
+                    disabled={carregandoEmailsPermitidos}
+                  />
+                </label>
+              </div>
+              <p className="text-[10px] text-[#2c3f1d]/60">O sistema extrai emails automaticamente. Cada email válido será inserido ou atualizado na tabela.</p>
+            </div>
+
+            {mensagemEmailsPermitidos && (
+              <div className="mt-6 bg-[#eaf3de] border border-[#4a5937]/20 text-[#4a5937] p-4 rounded-2xl text-sm">
+                {mensagemEmailsPermitidos}
+              </div>
+            )}
+          </section>
+
+          <section className="bg-white p-8 rounded-[2rem] shadow-sm border border-transparent hover:border-[#4a5937]/20 transition-all">
+            <div className="flex items-center gap-4 mb-6">
+              <div className="bg-[#e4eed7] p-3 rounded-2xl text-[#4a5937]"><Search size={24} /></div>
+              <div>
+                <h2 className="text-xl font-black text-[#1d2a13] uppercase tracking-tight">Lista de Emails Permitidos</h2>
+                <p className="text-[10px] text-[#2c3f1d]/70 uppercase tracking-[0.2em]">Busca rápida entre emails autorizados</p>
+              </div>
+            </div>
+
+            <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div className="relative flex-1">
+                <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-[#4a5937]/50" />
+                <input
+                  type="text"
+                  placeholder="Buscar email autorizado..."
+                  value={pesquisaEmailsPermitidos}
+                  onChange={(e) => setPesquisaEmailsPermitidos(e.target.value)}
+                  className="w-full bg-[#f4f7ef] border border-[#e4eed7] rounded-[1.5rem] pl-12 pr-5 py-4 text-sm outline-none focus:ring-2 focus:ring-[#4a5937]/20"
+                />
+              </div>
+              <button
+                onClick={() => carregarEmailsPermitidos(pesquisaEmailsPermitidos)}
+                className="inline-flex items-center gap-2 bg-[#4a5937] hover:bg-[#323d24] text-white px-5 py-4 rounded-full text-xs font-black uppercase tracking-widest transition-colors"
+              >
+                <Reload size={14} />
+                Atualizar lista
+              </button>
+            </div>
+
+            <div className="max-h-[320px] overflow-y-auto pr-2 space-y-3">
+              {carregandoEmailsPermitidosList ? (
+                <div className="py-12 flex items-center justify-center text-[#4a5937]">
+                  <Loader2 className="animate-spin" size={20} />
+                </div>
+              ) : emailsPermitidos
+                  .filter((item) =>
+                    !pesquisaEmailsPermitidos || item.email.toLowerCase().includes(pesquisaEmailsPermitidos.toLowerCase())
+                  )
+                  .map((item) => (
+                    <div key={item.id || item.email} className="bg-[#f8fbf3] rounded-2xl p-4 border border-[#e4eed7]">
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                        <div className="min-w-0">
+                          <p className="font-black text-sm text-[#1d2a13] truncate">{item.email}</p>
+                          <p className="text-[10px] text-[#2c3f1d]/70 mt-2">
+                            {item.nome ? `Nome: ${item.nome}` : 'Nome não informado'}
+                          </p>
+                          <p className="text-[10px] text-[#2c3f1d]/70 mt-1">
+                            {item.chacara ? `Chácara: ${item.chacara}` : 'Chácara não informada'}
+                          </p>
+                        </div>
+                        <span className={`inline-flex items-center rounded-full px-3 py-2 text-[10px] font-black uppercase tracking-[0.2em] ${item.ativo ? 'bg-[#e4eed7] text-[#4a5937]' : 'bg-red-50 text-red-600'}`}>
+                          {item.ativo ? 'Ativo' : 'Inativo'}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+            </div>
           </section>
 
           <section className="bg-white p-8 rounded-[2rem] shadow-sm border border-transparent hover:border-[#4a5937]/20 transition-all">
