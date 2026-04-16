@@ -84,34 +84,38 @@ export default function LoginPage() {
           tipo: perfil?.tipo_usuario || data.user.user_metadata?.tipo || 'morador'
         }));
 
-        // Registrar sessão ativa para o painel do síndico
-        try {
-          console.log('Registrando sessão para:', data.user.email);
-          const sessaoResponse = await fetch('/api/auth/registrar-sessao', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${data.session.access_token}`
-            },
-            body: JSON.stringify({
-              userId: data.user.id,
-              userEmail: data.user.email,
-              userName: perfil?.nome || data.user.user_metadata?.nome || 'Morador'
-            })
-          });
-          
-          const sessaoData = await sessaoResponse.json();
-          console.log('Resposta do registro de sessão:', sessaoResponse.status, sessaoData);
-          
-          if (!sessaoResponse.ok) {
-            console.error('Erro ao registrar sessão:', sessaoData);
+        // Registrar sessão ativa para o painel do síndico apenas quando houver token de sessão
+        if (data.session?.access_token) {
+          try {
+            console.log('Registrando sessão para:', data.user.email);
+            const sessaoResponse = await fetch('/api/auth/registrar-sessao', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${data.session.access_token}`
+              },
+              body: JSON.stringify({
+                userId: data.user.id,
+                userEmail: data.user.email,
+                userName: perfil?.nome || data.user.user_metadata?.nome || 'Morador'
+              })
+            });
+
+            const sessaoData = await sessaoResponse.json();
+            console.log('Resposta do registro de sessão:', sessaoResponse.status, sessaoData);
+
+            if (!sessaoResponse.ok) {
+              console.error('Erro ao registrar sessão:', sessaoData);
+            }
+          } catch (sessaoError) {
+            console.error('Não foi possível registrar sessão ativa:', sessaoError);
           }
-        } catch (sessaoError) {
-          console.error('Não foi possível registrar sessão ativa:', sessaoError);
+        } else {
+          console.warn('Sessão do Supabase não retornou token; registro de sessão ativa foi ignorado.');
         }
 
         setCarregando(false);
-        
+
         // Redirecionar para o dashboard
         setTimeout(() => {
           router.push('/dashboard');
@@ -226,10 +230,10 @@ export default function LoginPage() {
           <div className="mt-6 space-y-3">
             <div className="text-center">
               <button
-                onClick={() => router.push('/membros/cadastro')}
+                onClick={() => router.push('/membros/checagem-email')}
                 className="text-[#4a5937]/60 hover:text-[#4a5937] text-sm transition-colors"
               >
-                Não tem conta? Cadastre-se
+                Não tem conta? Verifique seu email antes de cadastrar
               </button>
             </div>
           </div>
