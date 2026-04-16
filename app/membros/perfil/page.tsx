@@ -65,7 +65,7 @@ export default function ConfigurarPerfil() {
   if (!hasMounted) return <div className="min-h-screen bg-[#435334]" />;
 
   return (
-    <div className="min-h-screen bg-[url('https://unsplash.com')] bg-cover bg-fixed bg-center flex items-center justify-center p-6">
+    <div className="min-h-screen bg-[url('https://images.unsplash.com/photo-1542273917363-3b1817f69a2d?q=80&w=2074&auto=format&fit=crop')] bg-cover bg-local bg-center flex items-center justify-center p-6">
       <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px]"></div>
 
       {/* Botão Sair Flutuante */}

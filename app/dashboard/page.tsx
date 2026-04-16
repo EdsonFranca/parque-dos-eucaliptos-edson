@@ -273,7 +273,7 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="flex h-screen bg-[#eaf3de] text-[#2c3f1d] font-sans overflow-hidden">
+    <div className="flex min-h-screen bg-[#eaf3de] text-[#2c3f1d] font-sans overflow-auto">
       <FaleComSindicoFloating />
       
       {/* 75% LEFT DASHBOARD */}
