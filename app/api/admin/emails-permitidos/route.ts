@@ -8,14 +8,6 @@ type EmailPermitidoPayload = {
   ativo?: boolean;
 };
 
-type AdminAuthResult = {
-  ok: true;
-  serviceClient: ReturnType<typeof createClient>;
-} | {
-  ok: false;
-  status: number;
-};
-
 function getServerClients() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
@@ -39,14 +31,14 @@ function isValidEmail(email: string) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
 }
 
-async function isAdminRequest(request: Request): Promise<AdminAuthResult> {
+async function isAdminRequest(request: Request) {
   const authHeader = request.headers.get('authorization');
   const token = authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : null;
-  if (!token) return { ok: false, status: 401 };
+  if (!token) return { ok: false as const, status: 401 };
 
   const { anonClient, serviceClient } = getServerClients();
   const { data: authData, error: authError } = await anonClient.auth.getUser(token);
-  if (authError || !authData.user) return { ok: false, status: 401 };
+  if (authError || !authData.user) return { ok: false as const, status: 401 };
 
   const { data: perfilAdmin, error: perfilError } = await serviceClient
     .from('perfis_moradores')
@@ -55,10 +47,10 @@ async function isAdminRequest(request: Request): Promise<AdminAuthResult> {
     .single();
 
   if (perfilError || perfilAdmin?.tipo_usuario !== 'admin') {
-    return { ok: false, status: 403 };
+    return { ok: false as const, status: 403 };
   }
 
-  return { ok: true, serviceClient };
+  return { ok: true as const, serviceClient };
 }
 
 export async function GET(request: Request) {
@@ -116,7 +108,7 @@ export async function POST(request: Request) {
           ativo: item.ativo ?? true,
         };
       })
-      .filter((item): item is EmailPermitidoPayload => item !== null);
+      .filter(Boolean) as EmailPermitidoPayload[];
 
     if (sanitized.length === 0) {
       return NextResponse.json({ error: 'Nenhum email válido encontrado.' }, { status: 400 });
