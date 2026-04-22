@@ -1,0 +1,208 @@
+
+[1m[30m[46m RUN [49m[39m[22m [36mv4.1.4 [39m[90mC:/GITHUB/parque-dos-eucaliptos - Copia[39m
+
+[90mstdout[2m | app/exemplo2.test.tsx
+[22m[39m◇ injected env (0) from .env.test // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+
+[90mstdout[2m | app/dashboard/Dashboard.test.tsx
+[22m[39m◇ injected env (0) from .env.test // tip: ⌘ suppress logs { quiet: true }
+
+[90mstdout[2m | components/Card.test.tsx
+[22m[39m◇ injected env (0) from .env.test // tip: ◈ secrets for agents [www.dotenvx.com]
+
+[90mstdout[2m | app/dashboard/Dashboard.test.tsx[2m > [22m[2mDashboard[2m > [22m[2mdeve renderizar o dashboard quando o usuário estiver autenticado
+[22m[39mBuscando obras...
+
+[90mstdout[2m | app/dashboard/Dashboard.test.tsx[2m > [22m[2mDashboard[2m > [22m[2mdeve renderizar o dashboard quando o usuário estiver autenticado
+[22m[39mObras encontradas: [33m0[39m
+Buscando posts...
+
+[90mstdout[2m | app/dashboard/Dashboard.test.tsx[2m > [22m[2mDashboard[2m > [22m[2mdeve renderizar o dashboard quando o usuário estiver autenticado
+[22m[39mPosts encontrados: [33m0[39m
+
+[90mstdout[2m | app/dashboard/Dashboard.test.tsx[2m > [22m[2mDashboard[2m > [22m[2mdeve renderizar o dashboard quando o usuário estiver autenticado
+[22m[39mBuscando obras...
+
+[90mstdout[2m | app/dashboard/Dashboard.test.tsx[2m > [22m[2mDashboard[2m > [22m[2mdeve renderizar o dashboard quando o usuário estiver autenticado
+[22m[39mObras encontradas: [33m0[39m
+Buscando posts...
+
+[90mstdout[2m | app/dashboard/Dashboard.test.tsx[2m > [22m[2mDashboard[2m > [22m[2mdeve renderizar o dashboard quando o usuário estiver autenticado
+[22m[39mPosts encontrados: [33m0[39m
+
+ [32m✓[39m components/Card.test.tsx [2m([22m[2m1 test[22m[2m)[22m[32m 270[2mms[22m[39m
+ [32m✓[39m app/dashboard/Dashboard.test.tsx [2m([22m[2m2 tests[22m[2m)[22m[32m 272[2mms[22m[39m
+ [32m✓[39m app/exemplo2.test.tsx [2m([22m[2m1 test[22m[2m)[22m[33m 443[2mms[22m[39m
+     [33m[2m✓[22m[39m renders the title correctly [33m 439[2mms[22m[39m
+[90mstdout[2m | app/admin/dashboard/DashboardAdmin.test.tsx
+[22m[39m◇ injected env (0) from .env.test // tip: ⌘ override existing { override: true }
+
+[90mstdout[2m | Exemplo.test.tsx
+[22m[39m◇ injected env (0) from .env.test // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+
+ [32m✓[39m Exemplo.test.tsx [2m([22m[2m1 test[22m[2m)[22m[32m 46[2mms[22m[39m
+[90mstdout[2m | app/admin/dashboard/DashboardAdmin.test.tsx[2m > [22m[2mDashboardAdmin[2m > [22m[2mdeve renderizar
+[22m[39mVerificando sessão...
+Verificando sessão...
+Sessão encontrada, verificando perfil... 123
+Sessão encontrada, verificando perfil... 123
+Resultado da verificação: { perfil: { id: [32m'123'[39m, tipo_usuario: [32m'admin'[39m }, error: [1mnull[22m }
+Perfil admin confirmado, carregando dados...
+Resultado da verificação: { perfil: { id: [32m'123'[39m, tipo_usuario: [32m'admin'[39m }, error: [1mnull[22m }
+Perfil admin confirmado, carregando dados...
+
+[90mstderr[2m | app/admin/dashboard/DashboardAdmin.test.tsx[2m > [22m[2mDashboardAdmin[2m > [22m[2mdeve renderizar
+[22m[39mAn update to DashboardAdmin inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+An update to DashboardAdmin inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+An update to DashboardAdmin inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+An update to DashboardAdmin inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+An update to DashboardAdmin inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+An update to DashboardAdmin inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+An update to DashboardAdmin inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+An update to DashboardAdmin inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+An update to DashboardAdmin inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+An update to DashboardAdmin inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+
+[90mstdout[2m | app/admin/dashboard/DashboardAdmin.test.tsx[2m > [22m[2mDashboardAdmin[2m > [22m[2mdeve renderizar
+[22m[39mDados carregados com sucesso
+Dados carregados com sucesso
+
+[90mstderr[2m | app/admin/dashboard/DashboardAdmin.test.tsx[2m > [22m[2mDashboardAdmin[2m > [22m[2mdeve renderizar
+[22m[39mAn update to DashboardAdmin inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+An update to DashboardAdmin inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+An update to DashboardAdmin inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+An update to DashboardAdmin inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+
+ [32m✓[39m app/admin/dashboard/DashboardAdmin.test.tsx [2m([22m[2m1 test[22m[2m)[22m[32m 51[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m5 passed[39m[22m[90m (5)[39m
+[2m      Tests [22m [1m[32m6 passed[39m[22m[90m (6)[39m
+[2m   Start at [22m 00:59:05
+[2m   Duration [22m 5.42s[2m (transform 384ms, setup 1.16s, import 2.23s, tests 1.08s, environment 7.51s)[22m
+

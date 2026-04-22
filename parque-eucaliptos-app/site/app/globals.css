@@ -1,0 +1,44 @@
+@import "tailwindcss";
+
+:root {
+  /* Paleta "Nature-First" */
+  --moss-green: #606C38;
+  --dark-forest: #283618;
+  --earth-brown: #BC6C25;
+  --sand-sun: #DDA15E;
+  --cream-base: #FEFAE0;
+
+  --background: var(--cream-base);
+  --foreground: var(--dark-forest);
+}
+
+@theme inline {
+  --color-moss: var(--moss-green);
+  --color-forest: var(--dark-forest);
+  --color-earth: var(--earth-brown);
+  --color-sand: var(--sand-sun);
+  --color-cream: var(--cream-base);
+  
+  --font-sans: 'Outfit', 'Inter', sans-serif;
+}
+/* Adicione isso no seu globals.css */
+@layer utilities {
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 6px;
+  }
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 10px;
+  }
+}
+
+
+body {
+  background-color: var(--background);
+  color: var(--foreground);
+  line-height: 1.6;
+  overflow-x: hidden;
+}
