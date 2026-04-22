@@ -2,9 +2,10 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { supabase } from '@/lib/supabase';
+//import { supabase } from '@/lib/supabase';
+import { supabase } from '../../../lib/supabase';
 import {
-  LogOut, Megaphone, HardHat, Camera, Trash2,
+  LogOut, Megaphone, HardHat, Camera, Trash2, Settings,
   ArrowRight, ShieldCheck, Clock, Loader2, Eraser, Heart, FileText, Users, Mail, XCircle, Upload, Plus, Search, RefreshCcw as Reload
 } from 'lucide-react';
 
@@ -41,6 +42,7 @@ export default function DashboardAdmin() {
   const [mensagemEmailsPermitidos, setMensagemEmailsPermitidos] = useState('');
   const [hasMounted, setHasMounted] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [isComercioAtivo, setIsComercioAtivo] = useState(true);
   const router = useRouter();
 
   const getAuthHeader = async () => {
@@ -219,7 +221,7 @@ export default function DashboardAdmin() {
         console.log('Perfil admin confirmado, carregando dados...');
         
         // Carregar dados em paralelo para melhor performance
-        const [obrasResult, postsResult] = await Promise.all([
+        const [obrasResult, postsResult, configResult] = await Promise.all([
           supabase
             .from('obras')
             .select('*, comentarios_obras(*)')
@@ -228,11 +230,17 @@ export default function DashboardAdmin() {
             .from('posts')
             .select('*')
             .neq('autor', 'ESTATUTO')
-            .order('created_at', { ascending: false })
+            .order('created_at', { ascending: false }),
+          supabase
+            .from('configuracoes_gerais')
+            .select('*')
+            .eq('chave', 'compra_venda_ativo')
+            .single()
         ]);
 
         if (obrasResult.data) setGaleria(obrasResult.data);
         if (postsResult.data) setAvisos(postsResult.data);
+        if (configResult.data) setIsComercioAtivo(configResult.data.valor);
         
         console.log('Dados carregados com sucesso');
         setLoading(false);
@@ -551,6 +559,18 @@ export default function DashboardAdmin() {
     setTituloAviso(''); setMsgAviso(''); setIsUrgente(false);
   };
 
+  const toggleComercio = async () => {
+    const newValue = !isComercioAtivo;
+    setIsComercioAtivo(newValue);
+    const { error } = await supabase
+      .from('configuracoes_gerais')
+      .upsert({ chave: 'compra_venda_ativo', valor: newValue });
+    if (error) {
+      alert("Erro ao alterar configuração.");
+      setIsComercioAtivo(!newValue);
+    }
+  };
+
   const handleLogout = async () => {
     await supabase.auth.signOut();
     router.replace('/admin/login');
@@ -698,6 +718,27 @@ export default function DashboardAdmin() {
               {carregando ? 'Salvando...' : 'ATUALIZAR ESTATUTO DO PARQUE'}
             </button>
             <ShieldCheck className="absolute -right-10 -bottom-10 text-white/5" size={200} />
+          </section>
+
+          {/* Configurações Locais */}
+          <section className="bg-white p-8 rounded-[2rem] shadow-sm border border-transparent hover:border-[#4a5937]/20 transition-all">
+             <div className="flex items-center gap-4 mb-6">
+               <div className="bg-[#e4eed7] p-3 rounded-2xl text-[#4a5937]"><Settings size={24} /></div>
+               <h2 className="text-xl font-black text-[#1d2a13] uppercase tracking-tight">Módulos</h2>
+            </div>
+            
+            <div className="flex flex-col sm:flex-row items-center justify-between bg-[#f4f7ef] p-5 rounded-[1.5rem] border border-[#e4eed7]">
+               <div>
+                  <h4 className="font-bold text-[#1d2a13] mb-1">Compra e Venda</h4>
+                  <p className="text-[10px] text-[#2c3f1d]/70 uppercase tracking-widest">Permitir vitrine de anúncios dos moradores</p>
+               </div>
+               <button 
+                 onClick={toggleComercio}
+                 className={`relative w-14 h-8 rounded-full transition-colors duration-300 ml-auto sm:ml-0 mt-4 sm:mt-0 ${isComercioAtivo ? 'bg-[#16a34a]' : 'bg-gray-300'}`}
+               >
+                 <span className={`absolute top-1 left-1 bg-white w-6 h-6 rounded-full transition-transform duration-300 shadow-sm ${isComercioAtivo ? 'translate-x-6' : 'translate-x-0'}`}></span>
+               </button>
+            </div>
           </section>
 
           <section className="bg-white p-8 rounded-[2rem] shadow-sm border border-transparent hover:border-[#4a5937]/20 transition-all">

@@ -24,27 +24,24 @@ export async function POST(request: Request) {
       .select('*')
       .eq('email', email.toLowerCase().trim())
       .eq('ativo', true)
-      .single();
-
-    console.log('Resultado da consulta:', { emailPermitido, error });
+      .maybeSingle();
 
     if (error) {
-      console.log('Erro detalhado:', error);
-      // Se não encontrar, retorna erro esperado
-      if (error.code === 'PGRST116') {
-        return NextResponse.json({ 
-          permitido: false, 
-          mensagem: 'Email não está na lista de autorizados.' 
-        });
-      }
       console.error('Erro inesperado na consulta:', error);
       return NextResponse.json({ error: `Erro ao verificar email: ${error.message}` }, { status: 500 });
     }
 
-    return NextResponse.json({ 
-      permitido: true, 
+    if (!emailPermitido) {
+      return NextResponse.json({
+        permitido: false,
+        mensagem: 'Email não está na lista de autorizados.'
+      });
+    }
+
+    return NextResponse.json({
+      permitido: true,
       dados: emailPermitido,
-      mensagem: 'Email autorizado para cadastro.' 
+      mensagem: 'Email autorizado para cadastro.'
     });
 
   } catch (error) {

@@ -1,0 +1,722 @@
+
+[1m[30m[46m RUN [49m[39m[22m [36mv4.1.4 [39m[90mC:/GITHUB/parque-dos-eucaliptos - Copia[39m
+
+[90mstdout[2m | app/exemplo2.test.tsx
+[22m[39m◇ injected env (0) from .env.test // tip: ◈ encrypted .env [www.dotenvx.com]
+
+[90mstdout[2m | components/Card.test.tsx
+[22m[39m◇ injected env (0) from .env.test // tip: ◈ encrypted .env [www.dotenvx.com]
+
+[90mstdout[2m | app/dashboard/Dashboard.test.tsx
+[22m[39m◇ injected env (0) from .env.test // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+
+ [32m✓[39m components/Card.test.tsx [2m([22m[2m1 test[22m[2m)[22m[32m 267[2mms[22m[39m
+ [32m✓[39m app/exemplo2.test.tsx [2m([22m[2m1 test[22m[2m)[22m[33m 387[2mms[22m[39m
+     [33m[2m✓[22m[39m renders the title correctly [33m 381[2mms[22m[39m
+ [31m❯[39m app/dashboard/Dashboard.test.tsx [2m([22m[2m2 tests[22m[2m | [22m[31m2 failed[39m[2m)[22m[33m 2177[2mms[22m[39m
+[31m     [31m×[31m deve renderizar o dashboard quando o usuário estiver autenticado[39m[33m 1130[2mms[22m[39m
+[31m     [31m×[31m deve mostrar mensagem de erro se não houver sessão[39m[33m 1038[2mms[22m[39m
+[90mstdout[2m | app/admin/dashboard/DashboardAdmin.test.tsx
+[22m[39m◇ injected env (0) from .env.test // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+
+[90mstdout[2m | Exemplo.test.tsx
+[22m[39m◇ injected env (0) from .env.test // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+
+ [32m✓[39m Exemplo.test.tsx [2m([22m[2m1 test[22m[2m)[22m[32m 38[2mms[22m[39m
+[90mstdout[2m | app/admin/dashboard/DashboardAdmin.test.tsx[2m > [22m[2mDashboardAdmin[2m > [22m[2mdeve renderizar
+[22m[39mVerificando sessão...
+Verificando sessão...
+Sessão encontrada, verificando perfil... 123
+Sessão encontrada, verificando perfil... 123
+Resultado da verificação: { perfil: { id: [32m'123'[39m, tipo_usuario: [32m'admin'[39m }, error: [1mnull[22m }
+Perfil admin confirmado, carregando dados...
+Resultado da verificação: { perfil: { id: [32m'123'[39m, tipo_usuario: [32m'admin'[39m }, error: [1mnull[22m }
+Perfil admin confirmado, carregando dados...
+
+[90mstderr[2m | app/admin/dashboard/DashboardAdmin.test.tsx[2m > [22m[2mDashboardAdmin[2m > [22m[2mdeve renderizar
+[22m[39mErro no checkAdmin: TypeError: __vite_ssr_import_2__.supabase.from(...).select(...).order is not a function
+    at checkAdmin (C:/GITHUB/parque-dos-eucaliptos - Copia/app/admin/dashboard/page.tsx:227:14)
+[90m    at processTicksAndRejections (node:internal/process/task_queues:104:5)[39m
+An update to DashboardAdmin inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+Erro no checkAdmin: TypeError: __vite_ssr_import_2__.supabase.from(...).select(...).order is not a function
+    at checkAdmin (C:/GITHUB/parque-dos-eucaliptos - Copia/app/admin/dashboard/page.tsx:227:14)
+[90m    at processTicksAndRejections (node:internal/process/task_queues:104:5)[39m
+An update to DashboardAdmin inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+
+ [32m✓[39m app/admin/dashboard/DashboardAdmin.test.tsx [2m([22m[2m1 test[22m[2m)[22m[32m 49[2mms[22m[39m
+
+[31m⎯⎯⎯⎯⎯⎯⎯[39m[1m[41m Failed Tests 2 [49m[22m[31m⎯⎯⎯⎯⎯⎯⎯[39m
+
+[41m[1m FAIL [22m[49m app/dashboard/Dashboard.test.tsx[2m > [22mDashboard[2m > [22mdeve renderizar o dashboard quando o usuário estiver autenticado
+[31m[1mTestingLibraryElementError[22m[39m: Unable to find an element with the text: /Dashboard/i. This could be because the text is broken up by multiple elements. In this case, you can provide a function for your text matcher to make your matcher more flexible.
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div>[39m
+    [36m<div[39m
+      [33mclass[39m=[32m"flex min-h-screen bg-[#eaf3de] text-[#2c3f1d] font-sans overflow-auto"[39m
+    [36m>[39m
+      [36m<div[39m
+        [33mdata-testid[39m=[32m"mock-fale-sindico"[39m
+      [36m>[39m
+        [0mFale com o Sindico[0m
+      [36m</div>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"flex-1 flex flex-col h-full overflow-y-auto"[39m
+      [36m>[39m
+        [36m<header>[39m
+          [0mHeader Mock[0m
+        [36m</header>[39m
+        [36m<main[39m
+          [33mclass[39m=[32m"flex-1 px-10 pb-10 space-y-10"[39m
+        [36m>[39m
+          [36m<section[39m
+            [33mclass[39m=[32m"relative h-[320px] rounded-[2.5rem] overflow-hidden shadow-2xl"[39m
+          [36m>[39m
+            [36m<img[39m
+              [33malt[39m=[32m"Eucaliptos Background"[39m
+              [33mclass[39m=[32m"absolute w-full h-full object-cover"[39m
+              [33msrc[39m=[32m"https://images.unsplash.com/photo-1542273917363-3b1817f69a2d?q=80&w=2074&auto=format&fit=crop"[39m
+            [36m/>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"absolute inset-0 bg-gradient-to-r from-[#2c3f1d]/90 via-[#2c3f1d]/60 to-transparent p-12 flex flex-col justify-center"[39m
+            [36m>[39m
+              [36m<div>[39m
+                [36m<span[39m
+                  [33mclass[39m=[32m"inline-block bg-white/20 backdrop-blur-md px-3 py-1 rounded-full text-[10px] font-bold text-white uppercase tracking-[0.1em] mb-4 border border-white/20"[39m
+                [36m>[39m
+                  [0mBEM-VINDO AO CORAÇÃO VERDE[0m
+                [36m</span>[39m
+                [36m<h1[39m
+                  [33mclass[39m=[32m"text-4xl md:text-5xl font-black max-w-2xl text-white leading-tight mb-8"[39m
+                [36m>[39m
+                  [0mQue bom ter você aqui, [0m
+                  [36m<br />[39m
+                  [36m<span[39m
+                    [33mclass[39m=[32m"italic text-[#eef0e5]"[39m
+                  [36m>[39m
+                    [0mMorador[0m
+                  [36m</span>[39m
+                  [0m![0m
+                [36m</h1>[39m
+                [36m<div[39m
+                  [33mclass[39m=[32m"flex gap-4"[39m
+                [36m>[39m
+                  [36m<button[39m
+                    [33mclass[39m=[32m"bg-[#4a5937] hover:bg-[#344026] text-white px-6 py-3 rounded-full text-sm font-bold shadow-lg transition-colors"[39m
+                  [36m>[39m
+                    [0mVer Benfeitorias[0m
+                  [36m</button>[39m
+                  [36m<button[39m
+                    [33mclass[39m=[32m"bg-white/20 hover:bg-white/30 backdrop-blur-md text-white px-6 py-3 rounded-full text-sm font-bold border border-white/30 transition-colors"[39m
+                  [36m>[39m
+                    [0mAgenda Cultural[0m
+                  [36m</button>[39m
+                [36m</div>[39m
+              [36m</div>[39m
+            [36m</div>[39m
+          [36m</section>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"grid grid-cols-1 lg:grid-cols-12 gap-10"[39m
+          [36m>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"col-span-8 space-y-10"[39m
+            [36m>[39m
+              [36m<div>[39m
+                [36m<div[39m
+                  [33mclass[39m=[32m"flex items-end justify-between mb-6"[39m
+                [36m>[39m
+                  [36m<h2[39m
+                    [33mclass[39m=[32m"text-2xl font-bold"[39m
+                  [36m>[39m
+                    [0mAcompanhamento de Obras[0m
+                  [36m</h2>[39m
+                [36m</div>[39m
+                [36m<div[39m
+                  [33mclass[39m=[32m"grid grid-cols-1 md:grid-cols-2 gap-6"[39m
+                [36m>[39m
+                  [36m<p[39m
+                    [33mclass[39m=[32m"text-sm text-[#2c3f1d]/50 italic"[39m
+                  [36m>[39m
+                    [0mNenhuma obra cadastrada ainda.[0m
+                  [36m</p>[39m
+                [36m</div>[39m
+              [36m</div>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"bg-[#e4eed7] p-8 rounded-[2.5rem] shadow-sm relative overflow-hidden"[39m
+              [36m>[39m
+                [36m<h2[39m
+                  [33mclass[39m=[32m"text-xl font-bold mb-6 text-[#1d2a13]"[39m
+                [36m>[39m
+                  [0mMural de Comunicados[0m
+                [36m</h2>[39m
+                [36m<div[39m
+                  [33mclass[39m=[32m"space-y-4"[39m
+                [36m>[39m
+                  [36m<p[39m
+                    [33mclass[39m=[32m"text-sm text-[#4a5937]/50 italic text-center py-4"[39m
+                  [36m>[39m
+                    [0mNenhum aviso importante no momento.[0m
+                  [36m</p>[39m
+                [36m</div>[39m
+              [36m</div>[39m
+            [36m</div>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"col-span-4 space-y-6"[39m
+            [36m>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"bg-[#daeccb] pt-6 pb-6 px-6 rounded-[2rem] shadow-sm"[39m
+              [36m>[39m
+                [36m<h3[39m
+                  [33mclass[39m=[32m"font-bold mb-6 flex items-center gap-2"[39m
+                [36m>[39m
+                  [36m<svg[39m
+                    [33maria-hidden[39m=[32m"true"[39m
+                    [33mclass[39m=[32m"lucide lucide-calendar"[39m
+                    [33mfill[39m=[32m"none"[39m
+                    [33mheight[39m=[32m"18"[39m
+                    [33mstroke[39m=[32m"currentColor"[39m
+                    [33mstroke-linecap[39m=[32m"round"[39m
+                    [33mstroke-linejoin[39m=[32m"round"[39m
+                    [33mstroke-width[39m=[32m"2"[39m
+                    [33mviewBox[39m=[32m"0 0 24 24"[39m
+                    [33mwidth[39m=[32m"18"[39m
+                    [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+                  [36m>[39m
+                    [36m<path[39m
+                      [33md[39m=[32m"M8 2v4"[39m
+                    [36m/>[39m
+                    [36m<path[39m
+                      [33md[39m=[32m"M16 2v4"[39m
+                    [36m/>[39m
+                    [36m<rect[39m
+                      [33mheight[39m=[32m"18"[39m
+                      [33mrx[39m=[32m"2"[39m
+                      [33mwidth[39m=[32m"18"[39m
+                      [33mx[39m=[32m"3"[39m
+                      [33my[39m=[32m"4"[39m
+                    [36m/>[39m
+                    [36m<path[39m
+                      [33md[39m=[32m"M3 10h18"[39m
+                    [36m/>[39m
+                  [36m</svg>[39m
+                  [0m Próximas Agendas[0m
+            ...
+
+Ignored nodes: comments, script, style
+[36m<html>[39m
+  [36m<head />[39m
+  [36m<body>[39m
+    [36m<div>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"flex min-h-screen bg-[#eaf3de] text-[#2c3f1d] font-sans overflow-auto"[39m
+      [36m>[39m
+        [36m<div[39m
+          [33mdata-testid[39m=[32m"mock-fale-sindico"[39m
+        [36m>[39m
+          [0mFale com o Sindico[0m
+        [36m</div>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"flex-1 flex flex-col h-full overflow-y-auto"[39m
+        [36m>[39m
+          [36m<header>[39m
+            [0mHeader Mock[0m
+          [36m</header>[39m
+          [36m<main[39m
+            [33mclass[39m=[32m"flex-1 px-10 pb-10 space-y-10"[39m
+          [36m>[39m
+            [36m<section[39m
+              [33mclass[39m=[32m"relative h-[320px] rounded-[2.5rem] overflow-hidden shadow-2xl"[39m
+            [36m>[39m
+              [36m<img[39m
+                [33malt[39m=[32m"Eucaliptos Background"[39m
+                [33mclass[39m=[32m"absolute w-full h-full object-cover"[39m
+                [33msrc[39m=[32m"https://images.unsplash.com/photo-1542273917363-3b1817f69a2d?q=80&w=2074&auto=format&fit=crop"[39m
+              [36m/>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"absolute inset-0 bg-gradient-to-r from-[#2c3f1d]/90 via-[#2c3f1d]/60 to-transparent p-12 flex flex-col justify-center"[39m
+              [36m>[39m
+                [36m<div>[39m
+                  [36m<span[39m
+                    [33mclass[39m=[32m"inline-block bg-white/20 backdrop-blur-md px-3 py-1 rounded-full text-[10px] font-bold text-white uppercase tracking-[0.1em] mb-4 border border-white/20"[39m
+                  [36m>[39m
+                    [0mBEM-VINDO AO CORAÇÃO VERDE[0m
+                  [36m</span>[39m
+                  [36m<h1[39m
+                    [33mclass[39m=[32m"text-4xl md:text-5xl font-black max-w-2xl text-white leading-tight mb-8"[39m
+                  [36m>[39m
+                    [0mQue bom ter você aqui, [0m
+                    [36m<br />[39m
+                    [36m<span[39m
+                      [33mclass[39m=[32m"italic text-[#eef0e5]"[39m
+                    [36m>[39m
+                      [0mMorador[0m
+                    [36m</span>[39m
+                    [0m![0m
+                  [36m</h1>[39m
+                  [36m<div[39m
+                    [33mclass[39m=[32m"flex gap-4"[39m
+                  [36m>[39m
+                    [36m<button[39m
+                      [33mclass[39m=[32m"bg-[#4a5937] hover:bg-[#344026] text-white px-6 py-3 rounded-full text-sm font-bold shadow-lg transition-colors"[39m
+                    [36m>[39m
+                      [0mVer Benfeitorias[0m
+                    [36m</button>[39m
+                    [36m<button[39m
+                      [33mclass[39m=[32m"bg-white/20 hover:bg-white/30 backdrop-blur-md text-white px-6 py-3 rounded-full text-sm font-bold border border-white/30 transition-colors"[39m
+                    [36m>[39m
+                      [0mAgenda Cultural[0m
+                    [36m</button>[39m
+                  [36m</div>[39m
+                [36m</div>[39m
+              [36m</div>[39m
+            [36m</section>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"grid grid-cols-1 lg:grid-cols-12 gap-10"[39m
+            [36m>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"col-span-8 space-y-10"[39m
+              [36m>[39m
+                [36m<div>[39m
+                  [36m<div[39m
+                    [33mclass[39m=[32m"flex items-end justify-between mb-6"[39m
+                  [36m>[39m
+                    [36m<h2[39m
+                      [33mclass[39m=[32m"text-2xl font-bold"[39m
+                    [36m>[39m
+                      [0mAcompanhamento de Obras[0m
+                    [36m</h2>[39m
+                  [36m</div>[39m
+                  [36m<div[39m
+                    [33mclass[39m=[32m"grid grid-cols-1 md:grid-cols-2 gap-6"[39m
+                  [36m>[39m
+                    [36m<p[39m
+                      [33mclass[39m=[32m"text-sm text-[#2c3f1d]/50 italic"[39m
+                    [36m>[39m
+                      [0mNenhuma obra cadastrada ainda.[0m
+                    [36m</p>[39m
+                  [36m</div>[39m
+                [36m</div>[39m
+                [36m<div[39m
+                  [33mclass[39m=[32m"bg-[#e4eed7] p-8 rounded-[2.5rem] shadow-sm relative overflow-hidden"[39m
+                [36m>[39m
+                  [36m<h2[39m
+                    [33mclass[39m=[32m"text-xl font-bold mb-6 text-[#1d2a13]"[39m
+                  [36m>[39m
+                    [0mMural de Comunicados[0m
+                  [36m</h2>[39m
+                  [36m<div[39m
+                    [33mclass[39m=[32m"space-y-4"[39m
+                  [36m>[39m
+                    [36m<p[39m
+                      [33mclass[39m=[32m"text-sm text-[#4a5937]/50 italic text-center py-4"[39m
+                    [36m>[39m
+                      [0mNenhum aviso importante no momento.[0m
+                    [36m</p>[39m
+                  [36m</div>[39m
+                [36m</div>[39m
+              [36m</div>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"col-span-4 space-y-6"[39m
+              [36m>[39m
+                [36m<div[39m
+                  [33mclass[39m=[32m"bg-[#daeccb] pt-6 pb-6 px-6 rounded-[2rem] shadow-sm"[39m
+                [36m>[39m
+                  [36m<h3[39m
+                    [33mclass[39m=[32m"font-bold mb-6 flex items-center gap-2"[39m
+                  [36m>[39m
+                    [36m<svg[39m
+                      [33maria-hidden[39m=[32m"true"[39m
+                      [33mclass[39m=[32m"lucide lucide-calendar"[39m
+                      [33mfill[39m=[32m"none"[39m
+                      [33mheight[39m=[32m"18"[39m
+                      [33mstroke[39m=[32m"currentColor"[39m
+                      [33mstroke-linecap[39m=[32m"round"[39m
+                      [33mstroke-linejoin[39m=[32m"round"[39m
+                      [33mstroke-width[39m=[32m"2"[39m
+                      [33mviewBox[39m=[32m"0 0 24 24"[39m
+                      [33mwidth[39m=[32m"18"[39m
+                      [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+                    [36m>[39m
+                      [36m<path[39m
+                        [33md[39m=[32m"M8 2v4"[39m
+                      [36m/>[39m
+                      [36m<path[39m
+                        [33md[39m=[32m"M16 2v4"[39m
+                      [36m/>[39m
+                      [36m<rect[39m
+                        [33mheight[39m=[32m"18"[39m
+                        [33mrx[39m=[32m"2"[39m
+                        [33mwidth[39m=[32m"18"[39m
+                      ...
+[90m [2m❯[22m Proxy.waitForWrapper node_modules/@testing-library/dom/dist/wait-for.js:[2m163:27[22m[39m
+[36m [2m❯[22m app/dashboard/Dashboard.test.tsx:[2m66:11[22m[39m
+    [90m 64|[39m     [34mrender[39m([33m<[39m[33mDashboard[39m [33m/[39m[33m>[39m)[33m;[39m
+    [90m 65|[39m
+    [90m 66|[39m     [35mawait[39m [34mwaitFor[39m(() [33m=>[39m {
+    [90m   |[39m           [31m^[39m
+    [90m 67|[39m       [90m// Use um texto que você sabe que existe no Dashboard[39m
+    [90m 68|[39m       [34mexpect[39m(screen[33m.[39m[34mgetByText[39m([36m/Dashboard/i[39m))[33m.[39m[34mtoBeInTheDocument[39m()[33m;[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m app/dashboard/Dashboard.test.tsx[2m > [22mDashboard[2m > [22mdeve mostrar mensagem de erro se não houver sessão
+[31m[1mTestingLibraryElementError[22m[39m: Unable to find an element with the text: /Você precisa estar logado/i. This could be because the text is broken up by multiple elements. In this case, you can provide a function for your text matcher to make your matcher more flexible.
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div>[39m
+    [36m<div[39m
+      [33mclass[39m=[32m"flex min-h-screen bg-[#eaf3de] text-[#2c3f1d] font-sans overflow-auto"[39m
+    [36m>[39m
+      [36m<div[39m
+        [33mdata-testid[39m=[32m"mock-fale-sindico"[39m
+      [36m>[39m
+        [0mFale com o Sindico[0m
+      [36m</div>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"flex-1 flex flex-col h-full overflow-y-auto"[39m
+      [36m>[39m
+        [36m<header>[39m
+          [0mHeader Mock[0m
+        [36m</header>[39m
+        [36m<main[39m
+          [33mclass[39m=[32m"flex-1 px-10 pb-10 space-y-10"[39m
+        [36m>[39m
+          [36m<section[39m
+            [33mclass[39m=[32m"relative h-[320px] rounded-[2.5rem] overflow-hidden shadow-2xl"[39m
+          [36m>[39m
+            [36m<img[39m
+              [33malt[39m=[32m"Eucaliptos Background"[39m
+              [33mclass[39m=[32m"absolute w-full h-full object-cover"[39m
+              [33msrc[39m=[32m"https://images.unsplash.com/photo-1542273917363-3b1817f69a2d?q=80&w=2074&auto=format&fit=crop"[39m
+            [36m/>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"absolute inset-0 bg-gradient-to-r from-[#2c3f1d]/90 via-[#2c3f1d]/60 to-transparent p-12 flex flex-col justify-center"[39m
+            [36m>[39m
+              [36m<div>[39m
+                [36m<span[39m
+                  [33mclass[39m=[32m"inline-block bg-white/20 backdrop-blur-md px-3 py-1 rounded-full text-[10px] font-bold text-white uppercase tracking-[0.1em] mb-4 border border-white/20"[39m
+                [36m>[39m
+                  [0mBEM-VINDO AO CORAÇÃO VERDE[0m
+                [36m</span>[39m
+                [36m<h1[39m
+                  [33mclass[39m=[32m"text-4xl md:text-5xl font-black max-w-2xl text-white leading-tight mb-8"[39m
+                [36m>[39m
+                  [0mQue bom ter você aqui, [0m
+                  [36m<br />[39m
+                  [36m<span[39m
+                    [33mclass[39m=[32m"italic text-[#eef0e5]"[39m
+                  [36m>[39m
+                    [0mMorador[0m
+                  [36m</span>[39m
+                  [0m![0m
+                [36m</h1>[39m
+                [36m<div[39m
+                  [33mclass[39m=[32m"flex gap-4"[39m
+                [36m>[39m
+                  [36m<button[39m
+                    [33mclass[39m=[32m"bg-[#4a5937] hover:bg-[#344026] text-white px-6 py-3 rounded-full text-sm font-bold shadow-lg transition-colors"[39m
+                  [36m>[39m
+                    [0mVer Benfeitorias[0m
+                  [36m</button>[39m
+                  [36m<button[39m
+                    [33mclass[39m=[32m"bg-white/20 hover:bg-white/30 backdrop-blur-md text-white px-6 py-3 rounded-full text-sm font-bold border border-white/30 transition-colors"[39m
+                  [36m>[39m
+                    [0mAgenda Cultural[0m
+                  [36m</button>[39m
+                [36m</div>[39m
+              [36m</div>[39m
+            [36m</div>[39m
+          [36m</section>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"grid grid-cols-1 lg:grid-cols-12 gap-10"[39m
+          [36m>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"col-span-8 space-y-10"[39m
+            [36m>[39m
+              [36m<div>[39m
+                [36m<div[39m
+                  [33mclass[39m=[32m"flex items-end justify-between mb-6"[39m
+                [36m>[39m
+                  [36m<h2[39m
+                    [33mclass[39m=[32m"text-2xl font-bold"[39m
+                  [36m>[39m
+                    [0mAcompanhamento de Obras[0m
+                  [36m</h2>[39m
+                [36m</div>[39m
+                [36m<div[39m
+                  [33mclass[39m=[32m"grid grid-cols-1 md:grid-cols-2 gap-6"[39m
+                [36m>[39m
+                  [36m<p[39m
+                    [33mclass[39m=[32m"text-sm text-[#2c3f1d]/50 italic"[39m
+                  [36m>[39m
+                    [0mNenhuma obra cadastrada ainda.[0m
+                  [36m</p>[39m
+                [36m</div>[39m
+              [36m</div>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"bg-[#e4eed7] p-8 rounded-[2.5rem] shadow-sm relative overflow-hidden"[39m
+              [36m>[39m
+                [36m<h2[39m
+                  [33mclass[39m=[32m"text-xl font-bold mb-6 text-[#1d2a13]"[39m
+                [36m>[39m
+                  [0mMural de Comunicados[0m
+                [36m</h2>[39m
+                [36m<div[39m
+                  [33mclass[39m=[32m"space-y-4"[39m
+                [36m>[39m
+                  [36m<p[39m
+                    [33mclass[39m=[32m"text-sm text-[#4a5937]/50 italic text-center py-4"[39m
+                  [36m>[39m
+                    [0mNenhum aviso importante no momento.[0m
+                  [36m</p>[39m
+                [36m</div>[39m
+              [36m</div>[39m
+            [36m</div>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"col-span-4 space-y-6"[39m
+            [36m>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"bg-[#daeccb] pt-6 pb-6 px-6 rounded-[2rem] shadow-sm"[39m
+              [36m>[39m
+                [36m<h3[39m
+                  [33mclass[39m=[32m"font-bold mb-6 flex items-center gap-2"[39m
+                [36m>[39m
+                  [36m<svg[39m
+                    [33maria-hidden[39m=[32m"true"[39m
+                    [33mclass[39m=[32m"lucide lucide-calendar"[39m
+                    [33mfill[39m=[32m"none"[39m
+                    [33mheight[39m=[32m"18"[39m
+                    [33mstroke[39m=[32m"currentColor"[39m
+                    [33mstroke-linecap[39m=[32m"round"[39m
+                    [33mstroke-linejoin[39m=[32m"round"[39m
+                    [33mstroke-width[39m=[32m"2"[39m
+                    [33mviewBox[39m=[32m"0 0 24 24"[39m
+                    [33mwidth[39m=[32m"18"[39m
+                    [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+                  [36m>[39m
+                    [36m<path[39m
+                      [33md[39m=[32m"M8 2v4"[39m
+                    [36m/>[39m
+                    [36m<path[39m
+                      [33md[39m=[32m"M16 2v4"[39m
+                    [36m/>[39m
+                    [36m<rect[39m
+                      [33mheight[39m=[32m"18"[39m
+                      [33mrx[39m=[32m"2"[39m
+                      [33mwidth[39m=[32m"18"[39m
+                      [33mx[39m=[32m"3"[39m
+                      [33my[39m=[32m"4"[39m
+                    [36m/>[39m
+                    [36m<path[39m
+                      [33md[39m=[32m"M3 10h18"[39m
+                    [36m/>[39m
+                  [36m</svg>[39m
+                  [0m Próximas Agendas[0m
+            ...
+
+Ignored nodes: comments, script, style
+[36m<html>[39m
+  [36m<head />[39m
+  [36m<body>[39m
+    [36m<div>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"flex min-h-screen bg-[#eaf3de] text-[#2c3f1d] font-sans overflow-auto"[39m
+      [36m>[39m
+        [36m<div[39m
+          [33mdata-testid[39m=[32m"mock-fale-sindico"[39m
+        [36m>[39m
+          [0mFale com o Sindico[0m
+        [36m</div>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"flex-1 flex flex-col h-full overflow-y-auto"[39m
+        [36m>[39m
+          [36m<header>[39m
+            [0mHeader Mock[0m
+          [36m</header>[39m
+          [36m<main[39m
+            [33mclass[39m=[32m"flex-1 px-10 pb-10 space-y-10"[39m
+          [36m>[39m
+            [36m<section[39m
+              [33mclass[39m=[32m"relative h-[320px] rounded-[2.5rem] overflow-hidden shadow-2xl"[39m
+            [36m>[39m
+              [36m<img[39m
+                [33malt[39m=[32m"Eucaliptos Background"[39m
+                [33mclass[39m=[32m"absolute w-full h-full object-cover"[39m
+                [33msrc[39m=[32m"https://images.unsplash.com/photo-1542273917363-3b1817f69a2d?q=80&w=2074&auto=format&fit=crop"[39m
+              [36m/>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"absolute inset-0 bg-gradient-to-r from-[#2c3f1d]/90 via-[#2c3f1d]/60 to-transparent p-12 flex flex-col justify-center"[39m
+              [36m>[39m
+                [36m<div>[39m
+                  [36m<span[39m
+                    [33mclass[39m=[32m"inline-block bg-white/20 backdrop-blur-md px-3 py-1 rounded-full text-[10px] font-bold text-white uppercase tracking-[0.1em] mb-4 border border-white/20"[39m
+                  [36m>[39m
+                    [0mBEM-VINDO AO CORAÇÃO VERDE[0m
+                  [36m</span>[39m
+                  [36m<h1[39m
+                    [33mclass[39m=[32m"text-4xl md:text-5xl font-black max-w-2xl text-white leading-tight mb-8"[39m
+                  [36m>[39m
+                    [0mQue bom ter você aqui, [0m
+                    [36m<br />[39m
+                    [36m<span[39m
+                      [33mclass[39m=[32m"italic text-[#eef0e5]"[39m
+                    [36m>[39m
+                      [0mMorador[0m
+                    [36m</span>[39m
+                    [0m![0m
+                  [36m</h1>[39m
+                  [36m<div[39m
+                    [33mclass[39m=[32m"flex gap-4"[39m
+                  [36m>[39m
+                    [36m<button[39m
+                      [33mclass[39m=[32m"bg-[#4a5937] hover:bg-[#344026] text-white px-6 py-3 rounded-full text-sm font-bold shadow-lg transition-colors"[39m
+                    [36m>[39m
+                      [0mVer Benfeitorias[0m
+                    [36m</button>[39m
+                    [36m<button[39m
+                      [33mclass[39m=[32m"bg-white/20 hover:bg-white/30 backdrop-blur-md text-white px-6 py-3 rounded-full text-sm font-bold border border-white/30 transition-colors"[39m
+                    [36m>[39m
+                      [0mAgenda Cultural[0m
+                    [36m</button>[39m
+                  [36m</div>[39m
+                [36m</div>[39m
+              [36m</div>[39m
+            [36m</section>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"grid grid-cols-1 lg:grid-cols-12 gap-10"[39m
+            [36m>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"col-span-8 space-y-10"[39m
+              [36m>[39m
+                [36m<div>[39m
+                  [36m<div[39m
+                    [33mclass[39m=[32m"flex items-end justify-between mb-6"[39m
+                  [36m>[39m
+                    [36m<h2[39m
+                      [33mclass[39m=[32m"text-2xl font-bold"[39m
+                    [36m>[39m
+                      [0mAcompanhamento de Obras[0m
+                    [36m</h2>[39m
+                  [36m</div>[39m
+                  [36m<div[39m
+                    [33mclass[39m=[32m"grid grid-cols-1 md:grid-cols-2 gap-6"[39m
+                  [36m>[39m
+                    [36m<p[39m
+                      [33mclass[39m=[32m"text-sm text-[#2c3f1d]/50 italic"[39m
+                    [36m>[39m
+                      [0mNenhuma obra cadastrada ainda.[0m
+                    [36m</p>[39m
+                  [36m</div>[39m
+                [36m</div>[39m
+                [36m<div[39m
+                  [33mclass[39m=[32m"bg-[#e4eed7] p-8 rounded-[2.5rem] shadow-sm relative overflow-hidden"[39m
+                [36m>[39m
+                  [36m<h2[39m
+                    [33mclass[39m=[32m"text-xl font-bold mb-6 text-[#1d2a13]"[39m
+                  [36m>[39m
+                    [0mMural de Comunicados[0m
+                  [36m</h2>[39m
+                  [36m<div[39m
+                    [33mclass[39m=[32m"space-y-4"[39m
+                  [36m>[39m
+                    [36m<p[39m
+                      [33mclass[39m=[32m"text-sm text-[#4a5937]/50 italic text-center py-4"[39m
+                    [36m>[39m
+                      [0mNenhum aviso importante no momento.[0m
+                    [36m</p>[39m
+                  [36m</div>[39m
+                [36m</div>[39m
+              [36m</div>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"col-span-4 space-y-6"[39m
+              [36m>[39m
+                [36m<div[39m
+                  [33mclass[39m=[32m"bg-[#daeccb] pt-6 pb-6 px-6 rounded-[2rem] shadow-sm"[39m
+                [36m>[39m
+                  [36m<h3[39m
+                    [33mclass[39m=[32m"font-bold mb-6 flex items-center gap-2"[39m
+                  [36m>[39m
+                    [36m<svg[39m
+                      [33maria-hidden[39m=[32m"true"[39m
+                      [33mclass[39m=[32m"lucide lucide-calendar"[39m
+                      [33mfill[39m=[32m"none"[39m
+                      [33mheight[39m=[32m"18"[39m
+                      [33mstroke[39m=[32m"currentColor"[39m
+                      [33mstroke-linecap[39m=[32m"round"[39m
+                      [33mstroke-linejoin[39m=[32m"round"[39m
+                      [33mstroke-width[39m=[32m"2"[39m
+                      [33mviewBox[39m=[32m"0 0 24 24"[39m
+                      [33mwidth[39m=[32m"18"[39m
+                      [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+                    [36m>[39m
+                      [36m<path[39m
+                        [33md[39m=[32m"M8 2v4"[39m
+                      [36m/>[39m
+                      [36m<path[39m
+                        [33md[39m=[32m"M16 2v4"[39m
+                      [36m/>[39m
+                      [36m<rect[39m
+                        [33mheight[39m=[32m"18"[39m
+                        [33mrx[39m=[32m"2"[39m
+                        [33mwidth[39m=[32m"18"[39m
+                      ...
+[90m [2m❯[22m Proxy.waitForWrapper node_modules/@testing-library/dom/dist/wait-for.js:[2m163:27[22m[39m
+[36m [2m❯[22m app/dashboard/Dashboard.test.tsx:[2m80:11[22m[39m
+    [90m 78|[39m     [34mrender[39m([33m<[39m[33mDashboard[39m [33m/[39m[33m>[39m)[33m;[39m
+    [90m 79|[39m
+    [90m 80|[39m     [35mawait[39m [34mwaitFor[39m(() [33m=>[39m {
+    [90m   |[39m           [31m^[39m
+    [90m 81|[39m       expect(screen.getByText(/Você precisa estar logado/i)).toBeInThe…
+    [90m 82|[39m     })[33m;[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯[22m[39m
+
+[31m⎯⎯⎯⎯⎯⎯[39m[1m[41m Unhandled Errors [49m[22m[31m⎯⎯⎯⎯⎯⎯[39m
+[31m[1m
+Vitest caught 1 unhandled error during the test run.
+This might cause false positive tests. Resolve unhandled errors to make sure your tests are not affected.[22m[39m
+
+[31m⎯⎯⎯⎯[39m[1m[41m Unhandled Rejection [49m[22m[31m⎯⎯⎯⎯⎯[39m
+[31m[1mTypeError[22m: Cannot destructure property 'data' of '(intermediate value)' as it is undefined.[39m
+[36m [2m❯[22m fetchData app/dashboard/page.tsx:[2m34:19[22m[39m
+    [90m 32|[39m     }
+    [90m 33|[39m
+    [90m 34|[39m     [35mconst[39m { data[33m:[39m perfilData } [33m=[39m [35mawait[39m supabase
+    [90m   |[39m                   [31m^[39m
+    [90m 35|[39m       [33m.[39m[35mfrom[39m([32m'perfis_moradores'[39m)
+    [90m 36|[39m       [33m.[39m[34mselect[39m([32m'*'[39m)
+[90m [2m❯[22m processTicksAndRejections node:internal/process/task_queues:[2m104:5[22m[39m
+
+[31mThis error originated in "[1mapp/dashboard/Dashboard.test.tsx[22m" test file. It doesn't mean the error was thrown inside the file itself, but while it was running.[39m
+[31mThe latest test that might've caused the error is "[1mdeve renderizar o dashboard quando o usuário estiver autenticado[22m". It might mean one of the following:
+- The error was thrown, while Vitest was running this test.
+- If the error occurred after the test had been completed, this was the last documented test before it was thrown.[39m
+[31m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[39m
+
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[2m | [22m[1m[32m4 passed[39m[22m[90m (5)[39m
+[2m      Tests [22m [1m[31m2 failed[39m[22m[2m | [22m[1m[32m4 passed[39m[22m[90m (6)[39m
+[2m     Errors [22m [1m[31m1 error[39m[22m
+[2m   Start at [22m 00:57:51
+[2m   Duration [22m 5.53s[2m (transform 429ms, setup 921ms, import 2.43s, tests 2.92s, environment 7.39s)[22m
+

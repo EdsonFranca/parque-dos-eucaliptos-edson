@@ -1,0 +1,347 @@
+﻿
+[1m[30m[46m RUN [49m[39m[22m [36mv4.1.4 [39m[90mC:/GITHUB/parque-dos-eucaliptos - Copia[39m
+
+[90mstdout[2m | components/Card.test.tsx
+[22m[39mÔùç injected env (0) from .env.test // tip: Ôîÿ enable debugging { debug: true }
+
+[90mstdout[2m | app/exemplo2.test.tsx
+[22m[39mÔùç injected env (0) from .env.test // tip: Ôîÿ override existing { override: true }
+
+[90mstdout[2m | app/dashboard/Dashboard.test.tsx
+[22m[39mÔùç injected env (0) from .env.test // tip: Ôùê encrypted .env [www.dotenvx.com]
+
+ [32mÔ£ô[39m components/Card.test.tsx [2m([22m[2m1 test[22m[2m)[22m[32m 215[2mms[22m[39m
+ [32mÔ£ô[39m app/exemplo2.test.tsx [2m([22m[2m1 test[22m[2m)[22m[32m 289[2mms[22m[39m
+ [31mÔØ»[39m app/dashboard/Dashboard.test.tsx [2m([22m[2m2 tests[22m[2m | [22m[31m2 failed[39m[2m)[22m[32m 112[2mms[22m[39m
+[31m     [31m├ù[31m deve renderizar o dashboard quando o usu├írio estiver autenticado[39m[32m 80[2mms[22m[39m
+[31m     [31m├ù[31m deve mostrar mensagem de erro se n├úo houver sess├úo[39m[32m 28[2mms[22m[39m
+[90mstdout[2m | Exemplo.test.tsx
+[22m[39mÔùç injected env (0) from .env.test // tip: Ôîÿ suppress logs { quiet: true }
+
+[90mstdout[2m | app/admin/dashboard/DashboardAdmin.test.tsx
+[22m[39mÔùç injected env (0) from .env.test // tip: Ôîÿ suppress logs { quiet: true }
+
+ [32mÔ£ô[39m Exemplo.test.tsx [2m([22m[2m1 test[22m[2m)[22m[32m 52[2mms[22m[39m
+[90mstdout[2m | app/admin/dashboard/DashboardAdmin.test.tsx[2m > [22m[2mDashboardAdmin[2m > [22m[2mdeve renderizar
+[22m[39mVerificando sess├úo...
+Verificando sess├úo...
+Sess├úo encontrada, verificando perfil... [90mundefined[39m
+Sess├úo encontrada, verificando perfil... [90mundefined[39m
+
+node.exe : [90mstderr[2m 
+| app/admin/dashboard/Dashb
+oardAdmin.test.tsx[2m > [
+22m[2mDashboardAdmin[2m 
+> [22m[2mdeve renderizar
+No linha:1 caractere:1
++ & "C:\Program 
+Files\nodejs/node.exe" 
+"C:\Program 
+Files\nodejs/node_mo ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~
+    + CategoryInfo         
+     : NotSpecified: ([9  
+  0mstderr[2m...deve re   
+ nderizar:String) [], R    
+emoteException
+    + FullyQualifiedErrorI 
+   d : NativeCommandError
+ 
+[22m[39mErro no 
+checkAdmin: TypeError: __vi
+te_ssr_import_2__.supabase.
+from(...).select(...).eq 
+is not a function
+    at checkAdmin (C:/GITHU
+B/parque-dos-eucaliptos - C
+opia/app/admin/dashboard/pa
+ge.tsx:196:12)
+[90m    at 
+processTicksAndRejections (
+node:internal/process/task_
+queues:104:5)[39m
+An update to 
+DashboardAdmin inside a 
+test was not wrapped in 
+act(...).
+
+When testing, code that 
+causes React state updates 
+should be wrapped into 
+act(...):
+
+act(() => {
+  /* fire events that 
+update state */
+});
+/* assert on the output */
+
+This ensures that you're 
+testing the behavior the 
+user would see in the 
+browser. Learn more at http
+s://react.dev/link/wrap-tes
+ts-with-act
+Erro no checkAdmin: 
+TypeError: __vite_ssr_impor
+t_2__.supabase.from(...).se
+lect(...).eq is not a 
+function
+    at checkAdmin (C:/GITHU
+B/parque-dos-eucaliptos - C
+opia/app/admin/dashboard/pa
+ge.tsx:196:12)
+[90m    at 
+processTicksAndRejections (
+node:internal/process/task_
+queues:104:5)[39m
+An update to 
+DashboardAdmin inside a 
+test was not wrapped in 
+act(...).
+
+When testing, code that 
+causes React state updates 
+should be wrapped into 
+act(...):
+
+act(() => {
+  /* fire events that 
+update state */
+});
+/* assert on the output */
+
+This ensures that you're 
+testing the behavior the 
+user would see in the 
+browser. Learn more at http
+s://react.dev/link/wrap-tes
+ts-with-act
+
+ [32mÔ£ô[39m app/admin/dashboard/DashboardAdmin.test.tsx [2m([22m[2m1 test[22m[2m)[22m[32m 51[2mms[22m[39m
+
+[31mÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»
+[39m[1m[41m Failed Tests 
+2 [49m[22m[31mÔÄ»ÔÄ»ÔÄ»Ô
+Ä»ÔÄ»ÔÄ»ÔÄ»[39m
+
+[41m[1m FAIL [22m[49m a
+pp/dashboard/Dashboard.test
+.tsx[2m > 
+[22mDashboard[2m > 
+[22mdeve renderizar o 
+dashboard quando o 
+usu├írio estiver 
+autenticado
+[41m[1m FAIL [22m[49m a
+pp/dashboard/Dashboard.test
+.tsx[2m > 
+[22mDashboard[2m > 
+[22mdeve mostrar mensagem 
+de erro se n├úo houver 
+sess├úo
+[31m[1mTypeError[22m: 
+supabase.channel is not a 
+function[39m
+[36m [2mÔØ»[22m app/dash
+board/page.tsx:[2m147:8[2
+2m[39m
+    [90m145|[39m     
+[90m// Configurar 
+Realtime para 
+atualiza├º├Áes 
+instant├óneas das 
+obras[39m
+    [90m146|[39m     
+[35mconst[39m 
+obrasSubscription 
+[33m=[39m supabase
+    [90m147|[39m       [
+33m.[39m[34mchannel[39m(
+[32m'obras_changes'[39m)
+    [90m   |[39m        
+[31m^[39m
+    [90m148|[39m       
+[33m.[39m[34mon[39m(
+    [90m149|[39m         
+[32m'postgres_changes'[39
+m[33m,[39m
+[90m [2mÔØ»[22m Object.r
+eact_stack_bottom_frame nod
+e_modules/react-dom/cjs/rea
+ct-dom-client.development.j
+s:[2m25989:20[22m[39m
+[90m [2mÔØ»[22m 
+runWithFiberInDEV node_modu
+les/react-dom/cjs/react-dom
+-client.development.js:[2m
+874:13[22m[39m
+[90m [2mÔØ»[22m 
+commitHookEffectListMount n
+ode_modules/react-dom/cjs/r
+eact-dom-client.development
+.js:[2m13249:29[22m[39m
+[90m [2mÔØ»[22m commitHo
+okPassiveMountEffects node_
+modules/react-dom/cjs/react
+-dom-client.development.js:
+[2m13336:11[22m[39m
+[90m [2mÔØ»[22m 
+commitPassiveMountOnFiber n
+ode_modules/react-dom/cjs/r
+eact-dom-client.development
+.js:[2m15484:13[22m[39m
+[90m [2mÔØ»[22m recursiv
+elyTraversePassiveMountEffe
+cts node_modules/react-dom/
+cjs/react-dom-client.develo
+pment.js:[2m15439:11[22m
+[39m
+[90m [2mÔØ»[22m 
+commitPassiveMountOnFiber n
+ode_modules/react-dom/cjs/r
+eact-dom-client.development
+.js:[2m15519:11[22m[39m
+[90m [2mÔØ»[22m 
+flushPassiveEffects node_mo
+dules/react-dom/cjs/react-d
+om-client.development.js:[
+2m18432:9[22m[39m
+[90m [2mÔØ»[22m node_mod
+ules/react-dom/cjs/react-do
+m-client.development.js:[2
+m17923:15[22m[39m
+
+[31m[2mÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»
+ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»
+ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»
+[1/2]ÔÄ»[22m[39m
+
+[31mÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»[39
+m[1m[41m Unhandled 
+Errors [49m[22m[31mÔÄ»ÔÄ
+»ÔÄ»ÔÄ»ÔÄ»ÔÄ»[39m
+[31m[1m
+Vitest caught 2 unhandled 
+errors during the test run.
+This might cause false 
+positive tests. Resolve 
+unhandled errors to make 
+sure your tests are not 
+affected.[22m[39m
+
+[31mÔÄ»ÔÄ»ÔÄ»ÔÄ»[39m[1m
+[41m Unhandled Rejection [
+49m[22m[31mÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ
+»[39m
+[31m[1mTypeError[22m: 
+Cannot destructure 
+property 'data' of 
+'(intermediate value)' as 
+it is undefined.[39m
+[36m [2mÔØ»[22m 
+fetchData app/dashboard/pag
+e.tsx:[2m28:19[22m[39m
+    [90m 26|[39m   
+[90m// Fun├º├úo para 
+buscar dados (movida para 
+fora do useEffect)[39m
+    [90m 27|[39m   
+[35mconst[39m fetchData 
+[33m=[39m 
+[35masync[39m () 
+[33m=>[39m {
+    [90m 28|[39m     
+[35mconst[39m { 
+data[33m:[39m { session 
+} } [33m=[39m 
+[35mawait[39m supabase[3
+3m.[39mauth[33m.[39m[34
+mgetSession[39m()[33m;[3
+9m
+    [90m   |[39m         
+          [31m^[39m
+    [90m 29|[39m     
+[35mif[39m 
+([33m![39msession) {
+    [90m 30|[39m       ro
+uter[33m.[39m[34mpush[3
+9m([32m"/"[39m)[33m;[39
+m
+[90m [2mÔØ»[22m 
+processTicksAndRejections n
+ode:internal/process/task_q
+ueues:[2m104:5[22m[39m
+
+[31mThis error originated 
+in "[1mapp/dashboard/Dashb
+oard.test.tsx[22m" test 
+file. It doesn't mean the 
+error was thrown inside 
+the file itself, but while 
+it was running.[39m
+
+[31mÔÄ»ÔÄ»ÔÄ»ÔÄ»[39m[1m
+[41m Unhandled Rejection [
+49m[22m[31mÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ
+»[39m
+[31m[1mTypeError[22m: 
+Cannot destructure 
+property 'data' of 
+'(intermediate value)' as 
+it is undefined.[39m
+[36m [2mÔØ»[22m 
+fetchData app/dashboard/pag
+e.tsx:[2m28:19[22m[39m
+    [90m 26|[39m   
+[90m// Fun├º├úo para 
+buscar dados (movida para 
+fora do useEffect)[39m
+    [90m 27|[39m   
+[35mconst[39m fetchData 
+[33m=[39m 
+[35masync[39m () 
+[33m=>[39m {
+    [90m 28|[39m     
+[35mconst[39m { 
+data[33m:[39m { session 
+} } [33m=[39m 
+[35mawait[39m supabase[3
+3m.[39mauth[33m.[39m[34
+mgetSession[39m()[33m;[3
+9m
+    [90m   |[39m         
+          [31m^[39m
+    [90m 29|[39m     
+[35mif[39m 
+([33m![39msession) {
+    [90m 30|[39m       ro
+uter[33m.[39m[34mpush[3
+9m([32m"/"[39m)[33m;[39
+m
+[90m [2mÔØ»[22m 
+processTicksAndRejections n
+ode:internal/process/task_q
+ueues:[2m104:5[22m[39m
+
+[31mThis error originated 
+in "[1mapp/dashboard/Dashb
+oard.test.tsx[22m" test 
+file. It doesn't mean the 
+error was thrown inside 
+the file itself, but while 
+it was running.[39m
+[31mÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»Ô
+Ä»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»Ô
+Ä»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»Ô
+Ä»ÔÄ»ÔÄ»ÔÄ»ÔÄ»[39m
+
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[2m | [22m[1m[32m4 passed[39m[22m[90m (5)[39m
+[2m      Tests [22m [1m[31m2 failed[39m[22m[2m | [22m[1m[32m4 passed[39m[22m[90m (6)[39m
+[2m     Errors [22m [1m[31m2 errors[39m[22m
+[2m   Start at [22m 00:53:54
+[2m   Duration [22m 5.30s[2m (transform 454ms, setup 818ms, import 1.94s, tests 719ms, environment 7.55s)[22m
+

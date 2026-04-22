@@ -87,10 +87,10 @@ const supabase = createClient(
        href={href}
        target="_blank"
        rel="noreferrer"
-       className="fixed bottom-6 right-6 z-50 group"
+       className="fixed bottom-4 right-4 z-50 group max-w-[calc(100vw-2rem)]"
        aria-label="Falar com o síndico no WhatsApp"
      >
-       <div className="flex items-center gap-3 rounded-full bg-[#25D366] text-white px-5 py-4 shadow-2xl shadow-black/30 border border-white/20 backdrop-blur-md transition-transform group-hover:scale-[1.03] active:scale-[0.98]">
+       <div className="flex items-center gap-3 rounded-full bg-[#25D366] text-white px-5 py-4 shadow-2xl shadow-black/30 border border-white/20 backdrop-blur-md transition-transform group-hover:scale-[1.03] active:scale-[0.98] min-w-0">
          <span className="grid place-items-center w-9 h-9 rounded-full bg-white/15">
            <MessageCircle size={18} />
          </span>

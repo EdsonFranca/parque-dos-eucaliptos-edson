@@ -5,6 +5,7 @@ import { Search, Calendar, History, Bookmark, Settings, MessageSquare, Lightbulb
 import { createClient } from '@supabase/supabase-js';
 import FaleComSindicoFloating from '@/components/FaleComSindicoFloating';
 import Header from '@/components/Header';
+import ClassificadosView from '@/components/ClassificadosView';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -22,6 +23,7 @@ export default function Dashboard() {
   const [estatutoTexto, setEstatutoTexto] = useState<string | null>(null);
   const [obras, setObras] = useState<any[]>([]);
   const [posts, setPosts] = useState<any[]>([]);
+  const [isComercioAtivo, setIsComercioAtivo] = useState(false);
 
   // Função para buscar dados (movida para fora do useEffect)
   const fetchData = async () => {
@@ -45,6 +47,12 @@ export default function Dashboard() {
     const { data: listaEstatuto } = await supabase.from('posts').select('*').eq('autor', 'ESTATUTO').order('created_at', { ascending: false }).limit(1);
     if (listaEstatuto && listaEstatuto.length > 0) {
       setEstatutoTexto(listaEstatuto[0].conteudo);
+    }
+
+    // Buscar configuracao de Comercio
+    const { data: config } = await supabase.from('configuracoes_gerais').select('valor').eq('chave', 'compra_venda_ativo').single();
+    if (config) {
+      setIsComercioAtivo(config.valor);
     }
 
     // Buscar obras e posts simultaneamente
@@ -273,7 +281,7 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="flex h-screen bg-[#eaf3de] text-[#2c3f1d] font-sans overflow-hidden">
+    <div className="flex min-h-screen bg-[#eaf3de] text-[#2c3f1d] font-sans overflow-auto">
       <FaleComSindicoFloating />
       
       {/* 75% LEFT DASHBOARD */}
@@ -283,6 +291,7 @@ export default function Dashboard() {
           activeTab={abaAtiva}
           onTabChange={setAbaAtiva}
           onLogout={handleLogout}
+          showCompraVenda={isComercioAtivo}
         />
 
         {/* Dashboard Main Content */}
@@ -489,6 +498,8 @@ export default function Dashboard() {
             </div>
           </div>
         </main>
+        ) : abaAtiva === 'comercio' && isComercioAtivo ? (
+          <ClassificadosView perfil={perfil} />
         ) : (
           <main className="flex-1 px-10 pb-10 pt-4 overflow-y-auto">
             <div className="bg-white rounded-[2.5rem] shadow-xl p-10 md:p-16 max-w-5xl mx-auto custom-scrollbar animate-in fade-in slide-in-from-bottom-8 duration-700">

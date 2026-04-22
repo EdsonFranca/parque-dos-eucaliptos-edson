@@ -9,6 +9,7 @@ interface HeaderProps {
   activeTab?: string;
   onTabChange?: (tab: string) => void;
   onLogout?: () => void;
+  showCompraVenda?: boolean;
 }
 
 export default function Header({
@@ -16,7 +17,8 @@ export default function Header({
   showNavigation = true,
   activeTab,
   onTabChange,
-  onLogout
+  onLogout,
+  showCompraVenda = false
 }: HeaderProps) {
   const router = useRouter();
   const { searchTerm, setSearchTerm, setIsSearching } = useSearch();
@@ -52,6 +54,14 @@ export default function Header({
             >
               Estatuto do Parque
             </button>
+            {showCompraVenda && (
+              <button
+                onClick={() => onTabChange?.('comercio')}
+                className={`${activeTab === 'comercio' ? 'border-b-[3px] border-[#2c3f1d] font-bold' : 'text-black/50 hover:text-black'} transition-colors pb-1`}
+              >
+                Compra e Venda
+              </button>
+            )}
             <a href="#" className="text-black/50 hover:text-black transition-colors pb-1">Transparência</a>
             <a href="#" className="text-black/50 hover:text-black transition-colors pb-1">Agendas</a>
             {onLogout && (
