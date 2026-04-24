@@ -6,6 +6,9 @@ import { createClient } from '@supabase/supabase-js';
 import FaleComSindicoFloating from '@/components/FaleComSindicoFloating';
 import Header from '@/components/Header';
 import ClassificadosView from '@/components/ClassificadosView';
+import ServicosView from '@/components/ServicosView';
+import TransparenciaView from '@/components/TransparenciaView';
+import AgendaView from '@/components/AgendaView';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -24,6 +27,7 @@ export default function Dashboard() {
   const [obras, setObras] = useState<any[]>([]);
   const [posts, setPosts] = useState<any[]>([]);
   const [isComercioAtivo, setIsComercioAtivo] = useState(false);
+  const [isServicosAtivo, setIsServicosAtivo] = useState(false);
 
   // Função para buscar dados (movida para fora do useEffect)
   const fetchData = async () => {
@@ -49,11 +53,19 @@ export default function Dashboard() {
       setEstatutoTexto(listaEstatuto[0].conteudo);
     }
 
-    // Buscar configuracao de Comercio
-    const { data: config } = await supabase.from('configuracoes_gerais').select('valor').eq('chave', 'compra_venda_ativo').single();
-    if (config) {
-      setIsComercioAtivo(config.valor);
-    }
+    // Buscar configuracoes de modulos
+    const { data: configComercio } = await supabase
+      .from('configuracoes_gerais')
+      .select('valor')
+      .eq('chave', 'compra_venda_ativo')
+      .single();
+    const { data: configServicos } = await supabase
+      .from('configuracoes_gerais')
+      .select('valor')
+      .eq('chave', 'servicos_ativo')
+      .single();
+    if (configComercio) setIsComercioAtivo(configComercio.valor);
+    if (configServicos) setIsServicosAtivo(configServicos.valor);
 
     // Buscar obras e posts simultaneamente
     try {
@@ -179,6 +191,30 @@ export default function Dashboard() {
       )
       .subscribe();
 
+    // Atualizar modulos em tempo real quando o sindico alterar no painel admin
+    const configSubscription = supabase
+      .channel('configuracoes_gerais_changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'configuracoes_gerais',
+        },
+        (payload) => {
+          const registro = payload.new as { chave?: string; valor?: boolean } | undefined;
+          if (!registro?.chave) return;
+
+          if (registro.chave === 'compra_venda_ativo') {
+            setIsComercioAtivo(Boolean(registro.valor));
+          }
+          if (registro.chave === 'servicos_ativo') {
+            setIsServicosAtivo(Boolean(registro.valor));
+          }
+        }
+      )
+      .subscribe();
+
     // Polling otimizado para atualizações (evitar multiplicação)
     const intervalo = setInterval(async () => {
       console.log('Verificando atualizações...');
@@ -215,8 +251,18 @@ export default function Dashboard() {
     return () => {
       clearInterval(intervalo);
       supabase.removeChannel(obrasSubscription);
+      supabase.removeChannel(configSubscription);
     };
   }, [router]);
+
+  useEffect(() => {
+    if (abaAtiva === 'comercio' && !isComercioAtivo) {
+      setAbaAtiva('dashboard');
+    }
+    if (abaAtiva === 'servicos' && !isServicosAtivo) {
+      setAbaAtiva('dashboard');
+    }
+  }, [abaAtiva, isComercioAtivo, isServicosAtivo]);
 
   const perguntarZelador = async () => {
     if (!pergunta) return;
@@ -292,6 +338,7 @@ export default function Dashboard() {
           onTabChange={setAbaAtiva}
           onLogout={handleLogout}
           showCompraVenda={isComercioAtivo}
+          showServicos={isServicosAtivo}
         />
 
         {/* Dashboard Main Content */}
@@ -500,6 +547,12 @@ export default function Dashboard() {
         </main>
         ) : abaAtiva === 'comercio' && isComercioAtivo ? (
           <ClassificadosView perfil={perfil} />
+        ) : abaAtiva === 'servicos' && isServicosAtivo ? (
+          <ServicosView perfil={perfil} />
+        ) : abaAtiva === 'transparencia' ? (
+          <TransparenciaView />
+        ) : abaAtiva === 'agenda' ? (
+          <AgendaView />
         ) : (
           <main className="flex-1 px-10 pb-10 pt-4 overflow-y-auto">
             <div className="bg-white rounded-[2.5rem] shadow-xl p-10 md:p-16 max-w-5xl mx-auto custom-scrollbar animate-in fade-in slide-in-from-bottom-8 duration-700">

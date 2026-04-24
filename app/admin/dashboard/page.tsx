@@ -8,6 +8,8 @@ import {
   LogOut, Megaphone, HardHat, Camera, Trash2, Settings,
   ArrowRight, ShieldCheck, Clock, Loader2, Eraser, Heart, FileText, Users, Mail, XCircle, Upload, Plus, Search, RefreshCcw as Reload
 } from 'lucide-react';
+import AdminTransparenciaManager from '@/components/AdminTransparenciaManager';
+import AdminAgendaManager from '@/components/AdminAgendaManager';
 
 export default function DashboardAdmin() {
   const [usuarios, setUsuarios] = useState<any[]>([]);
@@ -43,6 +45,7 @@ export default function DashboardAdmin() {
   const [hasMounted, setHasMounted] = useState(false);
   const [loading, setLoading] = useState(true);
   const [isComercioAtivo, setIsComercioAtivo] = useState(true);
+  const [isServicosAtivo, setIsServicosAtivo] = useState(true);
   const router = useRouter();
 
   const getAuthHeader = async () => {
@@ -221,7 +224,7 @@ export default function DashboardAdmin() {
         console.log('Perfil admin confirmado, carregando dados...');
         
         // Carregar dados em paralelo para melhor performance
-        const [obrasResult, postsResult, configResult] = await Promise.all([
+        const [obrasResult, postsResult, configComercioResult, configServicosResult] = await Promise.all([
           supabase
             .from('obras')
             .select('*, comentarios_obras(*)')
@@ -235,12 +238,18 @@ export default function DashboardAdmin() {
             .from('configuracoes_gerais')
             .select('*')
             .eq('chave', 'compra_venda_ativo')
+            .single(),
+          supabase
+            .from('configuracoes_gerais')
+            .select('*')
+            .eq('chave', 'servicos_ativo')
             .single()
         ]);
 
         if (obrasResult.data) setGaleria(obrasResult.data);
         if (postsResult.data) setAvisos(postsResult.data);
-        if (configResult.data) setIsComercioAtivo(configResult.data.valor);
+        if (configComercioResult.data) setIsComercioAtivo(configComercioResult.data.valor);
+        if (configServicosResult.data) setIsServicosAtivo(configServicosResult.data.valor);
         
         console.log('Dados carregados com sucesso');
         setLoading(false);
@@ -571,6 +580,18 @@ export default function DashboardAdmin() {
     }
   };
 
+  const toggleServicos = async () => {
+    const newValue = !isServicosAtivo;
+    setIsServicosAtivo(newValue);
+    const { error } = await supabase
+      .from('configuracoes_gerais')
+      .upsert({ chave: 'servicos_ativo', valor: newValue });
+    if (error) {
+      alert("Erro ao alterar configuração.");
+      setIsServicosAtivo(!newValue);
+    }
+  };
+
   const handleLogout = async () => {
     await supabase.auth.signOut();
     router.replace('/admin/login');
@@ -739,7 +760,23 @@ export default function DashboardAdmin() {
                  <span className={`absolute top-1 left-1 bg-white w-6 h-6 rounded-full transition-transform duration-300 shadow-sm ${isComercioAtivo ? 'translate-x-6' : 'translate-x-0'}`}></span>
                </button>
             </div>
+
+            <div className="flex flex-col sm:flex-row items-center justify-between bg-[#f4f7ef] p-5 rounded-[1.5rem] border border-[#e4eed7] mt-4">
+              <div>
+                <h4 className="font-bold text-[#1d2a13] mb-1">Postagem de Serviços</h4>
+                <p className="text-[10px] text-[#2c3f1d]/70 uppercase tracking-widest">Permitir anúncios de serviços entre moradores</p>
+              </div>
+              <button
+                onClick={toggleServicos}
+                className={`relative w-14 h-8 rounded-full transition-colors duration-300 ml-auto sm:ml-0 mt-4 sm:mt-0 ${isServicosAtivo ? 'bg-[#16a34a]' : 'bg-gray-300'}`}
+              >
+                <span className={`absolute top-1 left-1 bg-white w-6 h-6 rounded-full transition-transform duration-300 shadow-sm ${isServicosAtivo ? 'translate-x-6' : 'translate-x-0'}`}></span>
+              </button>
+            </div>
           </section>
+
+          <AdminTransparenciaManager />
+          <AdminAgendaManager />
 
           <section className="bg-white p-8 rounded-[2rem] shadow-sm border border-transparent hover:border-[#4a5937]/20 transition-all">
             <div className="flex items-center gap-4 mb-6">
