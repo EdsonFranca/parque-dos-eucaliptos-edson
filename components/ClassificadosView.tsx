@@ -17,6 +17,9 @@ export default function ClassificadosView({ perfil }: { perfil: any }) {
   const [novoPreco, setNovoPreco] = useState('');
   const [novaImagem, setNovaImagem] = useState<string | null>(null);
   const [salvando, setSalvando] = useState(false);
+  const [filtroBusca, setFiltroBusca] = useState('');
+  const [filtroPrecoMin, setFiltroPrecoMin] = useState('');
+  const [filtroPrecoMax, setFiltroPrecoMax] = useState('');
 
   // Estados do Chat
   const [chatAtivo, setChatAtivo] = useState<any>(null); // Pode ser os dados do anúncio ou do chat aberto
@@ -232,6 +235,22 @@ export default function ClassificadosView({ perfil }: { perfil: any }) {
     setChatSubscription(sub);
   };
 
+  const anunciosFiltrados = anuncios.filter((anuncio) => {
+    const termo = filtroBusca.trim().toLowerCase();
+    const matchTexto = !termo
+      || anuncio.titulo?.toLowerCase().includes(termo)
+      || anuncio.descricao?.toLowerCase().includes(termo)
+      || anuncio.vendedor_nome?.toLowerCase().includes(termo);
+
+    const preco = Number(anuncio.preco);
+    const min = filtroPrecoMin ? Number(filtroPrecoMin.replace(',', '.')) : null;
+    const max = filtroPrecoMax ? Number(filtroPrecoMax.replace(',', '.')) : null;
+    const matchMin = min === null || (!Number.isNaN(min) && preco >= min);
+    const matchMax = max === null || (!Number.isNaN(max) && preco <= max);
+
+    return matchTexto && matchMin && matchMax;
+  });
+
   return (
     <main className="flex-1 px-10 pb-10 pt-4 overflow-y-auto animate-in fade-in slide-in-from-bottom-8 duration-700">
       
@@ -324,8 +343,44 @@ export default function ClassificadosView({ perfil }: { perfil: any }) {
         ) : anuncios.length === 0 ? (
           <p className="text-center text-[#2c3f1d]/50 italic bg-white p-10 rounded-[2rem]">Nenhum anúncio disponível no momento.</p>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {anuncios.map(anuncio => (
+          <>
+            <section className="bg-white p-6 rounded-[2rem] shadow-sm border border-transparent hover:border-[#4a5937]/20 transition-all mb-6">
+              <div className="flex items-center gap-2 mb-4">
+                <Search size={16} className="text-[#4a5937]" />
+                <h3 className="text-sm font-black text-[#1d2a13] uppercase tracking-widest">Filtros da Vitrine</h3>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <input
+                  type="text"
+                  placeholder="Buscar por título, descrição ou morador"
+                  value={filtroBusca}
+                  onChange={(e) => setFiltroBusca(e.target.value)}
+                  className="w-full bg-[#f4f7ef] border-transparent rounded-[1.5rem] px-5 py-4 font-bold outline-none focus:ring-2 focus:ring-[#4a5937]/20 shadow-inner text-sm"
+                />
+                <input
+                  type="text"
+                  placeholder="Preço mínimo"
+                  value={filtroPrecoMin}
+                  onChange={(e) => setFiltroPrecoMin(e.target.value)}
+                  className="w-full bg-[#f4f7ef] border-transparent rounded-[1.5rem] px-5 py-4 font-bold outline-none focus:ring-2 focus:ring-[#4a5937]/20 shadow-inner text-sm"
+                />
+                <input
+                  type="text"
+                  placeholder="Preço máximo"
+                  value={filtroPrecoMax}
+                  onChange={(e) => setFiltroPrecoMax(e.target.value)}
+                  className="w-full bg-[#f4f7ef] border-transparent rounded-[1.5rem] px-5 py-4 font-bold outline-none focus:ring-2 focus:ring-[#4a5937]/20 shadow-inner text-sm"
+                />
+              </div>
+            </section>
+
+            {anunciosFiltrados.length === 0 ? (
+              <p className="text-center text-[#2c3f1d]/50 italic bg-white p-10 rounded-[2rem]">
+                Nenhum anúncio encontrado com os filtros informados.
+              </p>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                {anunciosFiltrados.map(anuncio => (
               <div key={anuncio.id} className="bg-white rounded-[2rem] overflow-hidden shadow-sm hover:shadow-xl transition-all border border-transparent hover:border-[#4a5937]/20 group flex flex-col">
                  <div className="h-48 overflow-hidden relative">
                    {anuncio.imagem_url ? (
@@ -354,8 +409,10 @@ export default function ClassificadosView({ perfil }: { perfil: any }) {
                     )}
                  </div>
               </div>
-            ))}
-          </div>
+                ))}
+              </div>
+            )}
+          </>
         )
       ) : (
         <section className="bg-white p-8 rounded-[2rem] shadow-sm border border-[#e4eed7]">

@@ -10,6 +10,7 @@ interface HeaderProps {
   onTabChange?: (tab: string) => void;
   onLogout?: () => void;
   showCompraVenda?: boolean;
+  showServicos?: boolean;
 }
 
 export default function Header({
@@ -18,7 +19,8 @@ export default function Header({
   activeTab,
   onTabChange,
   onLogout,
-  showCompraVenda = false
+  showCompraVenda = false,
+  showServicos = false,
 }: HeaderProps) {
   const router = useRouter();
   const { searchTerm, setSearchTerm, setIsSearching } = useSearch();
@@ -62,8 +64,26 @@ export default function Header({
                 Compra e Venda
               </button>
             )}
-            <a href="#" className="text-black/50 hover:text-black transition-colors pb-1">Transparência</a>
-            <a href="#" className="text-black/50 hover:text-black transition-colors pb-1">Agendas</a>
+            {showServicos && (
+              <button
+                onClick={() => onTabChange?.('servicos')}
+                className={`${activeTab === 'servicos' ? 'border-b-[3px] border-[#2c3f1d] font-bold' : 'text-black/50 hover:text-black'} transition-colors pb-1`}
+              >
+                Postagem de Serviços
+              </button>
+            )}
+            <button
+              onClick={() => onTabChange?.('transparencia')}
+              className={`${activeTab === 'transparencia' ? 'border-b-[3px] border-[#2c3f1d] font-bold' : 'text-black/50 hover:text-black'} transition-colors pb-1`}
+            >
+              Transparência
+            </button>
+            <button
+              onClick={() => onTabChange?.('agenda')}
+              className={`${activeTab === 'agenda' ? 'border-b-[3px] border-[#2c3f1d] font-bold' : 'text-black/50 hover:text-black'} transition-colors pb-1`}
+            >
+              Agendas
+            </button>
             {onLogout && (
               <button
                 onClick={onLogout}
