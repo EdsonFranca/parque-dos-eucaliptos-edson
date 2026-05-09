@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { BriefcaseBusiness, Plus, Loader2, Search, Camera, Trash2, Pencil, Save, X, MessageCircle } from 'lucide-react';
+import ServicoForm from './ServicoForm';
 
 export default function ServicosView({ perfil }: { perfil: any }) {
   const [servicos, setServicos] = useState<any[]>([]);
@@ -19,6 +20,54 @@ export default function ServicosView({ perfil }: { perfil: any }) {
   const [editDescricao, setEditDescricao] = useState('');
   const [editContato, setEditContato] = useState('');
   const [editFoto, setEditFoto] = useState<string | null>(null);
+
+  // Verificar parâmetro URL para abrir formulário automaticamente
+  useEffect(() => {
+    console.log('ServicosView - Componente montado!');
+    
+    // Verificar imediatamente e também com delay
+    const checkParams = () => {
+      const urlParams1 = new URLSearchParams(window.location.search);
+      const urlParams2 = new URLSearchParams(window.location.href.split('?')[1] || '');
+      
+      console.log('ServicosView - window.location.search:', window.location.search);
+      console.log('ServicosView - window.location.href:', window.location.href);
+      console.log('ServicosView - URL params (method 1):', urlParams1.toString());
+      console.log('ServicosView - URL params (method 2):', urlParams2.toString());
+      console.log('ServicosView - novo param (1):', urlParams1.get('novo'));
+      console.log('ServicosView - novo param (2):', urlParams2.get('novo'));
+      
+      // Tentar com ambos os métodos
+      const novoParam1 = urlParams1.get('novo');
+      const novoParam2 = urlParams2.get('novo');
+      
+      if (novoParam1 === 'true' || novoParam2 === 'true') {
+        console.log('ServicosView - Abrindo formulário automaticamente');
+        setMostrandoForm(true);
+        // Limpar parâmetro da URL sem recarregar a página
+        const newUrl = window.location.pathname + '?aba=servicos';
+        window.history.replaceState({}, '', newUrl);
+      } else {
+        console.log('ServicosView - Parâmetro novo não encontrado, verificando aba');
+        // Se não encontrou novo, verificar se pelo menos está na aba correta
+        const abaParam1 = urlParams1.get('aba');
+        const abaParam2 = urlParams2.get('aba');
+        console.log('ServicosView - aba param (1):', abaParam1);
+        console.log('ServicosView - aba param (2):', abaParam2);
+      }
+    };
+    
+    // Verificar imediatamente
+    checkParams();
+    
+    // E também verificar após 1 segundo
+    const timer = setTimeout(() => {
+      console.log('ServicosView - Verificando novamente após 1 segundo...');
+      checkParams();
+    }, 1000);
+    
+    return () => clearTimeout(timer);
+  }, []);
 
   const formatarTelefoneBR = (valor: string) => {
     const digitos = valor.replace(/\D/g, '').slice(0, 13);
@@ -37,19 +86,21 @@ export default function ServicosView({ perfil }: { perfil: any }) {
 
   const carregarServicos = async () => {
     setCarregando(true);
-    const { data, error } = await supabase
-      .from('servicos')
-      .select('*')
-      .order('created_at', { ascending: false });
-
-    if (error) {
-      console.error('Erro ao carregar serviços:', error);
-      setCarregando(false);
-      return;
+    try {
+      const response = await fetch('/api/servicos')
+      const result = await response.json()
+      
+      if (!response.ok) {
+        console.error('Erro ao carregar serviços:', result.error)
+        return
+      }
+      
+      if (result.data) setServicos(result.data)
+    } catch (error) {
+      console.error('Erro ao carregar serviços:', error)
+    } finally {
+      setCarregando(false)
     }
-
-    if (data) setServicos(data);
-    setCarregando(false);
   };
 
   useEffect(() => {
@@ -200,7 +251,7 @@ export default function ServicosView({ perfil }: { perfil: any }) {
   });
 
   return (
-    <main className="flex-1 px-10 pb-10 pt-4 overflow-y-auto animate-in fade-in slide-in-from-bottom-8 duration-700">
+    <main className="flex-1 px-4 md:px-10 pb-10 pt-4 overflow-y-auto animate-in fade-in slide-in-from-bottom-8 duration-700">
       <div className="flex flex-col md:flex-row justify-between items-center mb-10 gap-4">
         <div>
           <h2 className="text-3xl font-black text-[#1d2a13] uppercase tracking-tight flex items-center gap-3">
@@ -222,46 +273,22 @@ export default function ServicosView({ perfil }: { perfil: any }) {
 
       {mostrandoForm && (
         <section className="bg-white p-8 rounded-[2rem] shadow-sm border border-transparent hover:border-[#4a5937]/20 transition-all mb-10">
-          <h3 className="text-xl font-bold text-[#1d2a13] mb-6">Novo Servico</h3>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <input
-              type="text"
-              placeholder="Titulo do servico"
-              value={titulo}
-              onChange={(e) => setTitulo(e.target.value)}
-              className="w-full bg-[#f4f7ef] border-transparent rounded-[1.5rem] px-5 py-4 font-bold outline-none focus:ring-2 focus:ring-[#4a5937]/20 shadow-inner text-sm"
-            />
-            <input
-              type="text"
-              placeholder="Contato (telefone/email)"
-              value={contato}
-              onChange={(e) => setContato(formatarTelefoneBR(e.target.value))}
-              className="w-full bg-[#f4f7ef] border-transparent rounded-[1.5rem] px-5 py-4 font-bold outline-none focus:ring-2 focus:ring-[#4a5937]/20 shadow-inner text-sm"
-            />
+          <div className="flex justify-between items-center mb-6">
+            <h3 className="text-xl font-bold text-[#1d2a13]">Novo Serviço</h3>
             <button
-              onClick={publicarServico}
-              disabled={salvando}
-              className="bg-[#4a5937] hover:bg-[#323d24] text-white font-black py-4 rounded-[1.5rem] transition-colors shadow-lg disabled:opacity-50 flex items-center justify-center gap-2"
+              onClick={() => setMostrandoForm(false)}
+              className="text-gray-500 hover:text-gray-700"
             >
-              {salvando ? <Loader2 size={16} className="animate-spin" /> : 'PUBLICAR'}
+              <X size={24} />
             </button>
           </div>
-          <label className="block border-2 border-dashed border-[#4a5937]/20 bg-[#f4f7ef] hover:bg-[#e4eed7] p-4 rounded-[1.5rem] h-52 cursor-pointer text-center transition-colors mt-4 relative">
-            {foto ? (
-              <img src={foto} className="w-full h-full rounded-xl object-cover" alt="Foto do serviço" />
-            ) : (
-              <div className="h-full flex flex-col justify-center items-center opacity-60 text-[#4a5937]">
-                <Camera size={32} className="mb-2" />
-                <span className="text-xs font-bold uppercase tracking-widest">Adicionar Foto do Serviço</span>
-              </div>
-            )}
-            <input type="file" className="hidden" accept="image/*" onChange={(e) => handleFileChange(e, 'novo')} />
-          </label>
-          <textarea
-            placeholder="Detalhe o servico, disponibilidade e experiencia..."
-            value={descricao}
-            onChange={(e) => setDescricao(e.target.value)}
-            className="w-full bg-[#f4f7ef] border-transparent rounded-[1.5rem] p-5 mt-4 h-32 outline-none focus:ring-2 focus:ring-[#4a5937]/20 shadow-inner text-sm resize-none"
+          <ServicoForm
+            perfil={perfil}
+            onSave={() => {
+              setMostrandoForm(false)
+              carregarServicos()
+            }}
+            onCancel={() => setMostrandoForm(false)}
           />
         </section>
       )}

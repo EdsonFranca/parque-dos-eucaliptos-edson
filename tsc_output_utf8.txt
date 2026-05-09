@@ -1,0 +1,8 @@
+﻿app/vitest.config.ts(1,24): error TS2305: Module '"vitest/config"' has no exported member 'loadEnv'.
+lib/ia.ts(11,9): error TS2540: Cannot assign to 'allowLocalModels' because it is a read-only property.
+parque-eucaliptos-app/site/app/dashboard/Dashboard.test.tsx(41,22): error TS2554: Expected 2-3 arguments, but got 0.
+parque-eucaliptos-app/site/app/vitest.config.ts(1,24): error TS2305: Module '"vitest/config"' has no exported member 'loadEnv'.
+parque-eucaliptos-app/site/lib/ia.ts(11,9): error TS2540: Cannot assign to 'allowLocalModels' because it is a read-only property.
+src/lib/schemas/formsSchema.ts(183,62): error TS18048: 'data.precoMin' is possibly 'undefined'.
+src/lib/schemas/formsSchema.ts(183,79): error TS18048: 'data.precoMax' is possibly 'undefined'.
+vitest.config2.ts(7,15): error TS2304: Cannot find name 'loadEnv'.

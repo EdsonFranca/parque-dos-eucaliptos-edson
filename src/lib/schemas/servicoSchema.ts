@@ -1,14 +1,20 @@
 import { z } from 'zod'
 
 export const servicoSchema = z.object({
+  prestador_id: z.string().uuid('ID do prestador inválido'),
+  prestador_nome: z.string()
+    .min(2, 'Nome do prestador deve ter pelo menos 2 caracteres')
+    .max(100, 'Nome do prestador não pode ter mais de 100 caracteres')
+    .trim(),
+  
   titulo: z.string()
     .min(5, 'Título deve ter pelo menos 5 caracteres')
     .max(200, 'Título não pode ter mais de 200 caracteres')
     .trim(),
   
   descricao: z.string()
-    .min(20, 'Descrição deve ter pelo menos 20 caracteres')
-    .max(5000, 'Descrição não pode ter mais de 5.000 caracteres')
+    .min(10, 'Descrição deve ter pelo menos 10 caracteres')
+    .max(3000, 'Descrição não pode ter mais de 3.000 caracteres')
     .trim(),
   
   categoria: z.string()
@@ -146,15 +152,15 @@ export const servicoSchema = z.object({
   }),
   
   imagens: z.array(z.string()
-    .url('URL da imagem inválida')
-    .max(500, 'URL não pode ter mais de 500 caracteres')
+    .min(1, 'URL da imagem não pode estar vazia')
+    .max(1000000, 'URL da imagem muito longa')
     .trim())
     .max(10, 'Máximo de 10 imagens permitidas')
     .optional(),
   
   videos: z.array(z.string()
-    .url('URL do vídeo inválida')
-    .max(500, 'URL não pode ter mais de 500 caracteres')
+    .min(1, 'URL do vídeo não pode estar vazia')
+    .max(1000000, 'URL do vídeo muito longa')
     .trim())
     .max(5, 'Máximo de 5 vídeos permitidos')
     .optional(),

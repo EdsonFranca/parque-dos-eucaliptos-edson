@@ -44,20 +44,23 @@ export default function ConfigurarPerfil() {
     const dadosPerfil = {
       id: user.id,
       nome,
-      apto,
-      foto_url: foto || '',
-      perfil_completo: true
+      apto
     };
-// Salva no Supabase (Upsert insere ou atualiza)
+// Salva no Supabase (Upsert insere ou atualiza) na tabela correta
   const { error } = await supabase
-    .from('perfis_moradores')
+    .from('perfis')
     .upsert(dadosPerfil);
 
   if (!error) {
+    console.log('Perfil salvo com sucesso, redirecionando...');
     // Também mantém no localStorage para acesso rápido na UI
     localStorage.setItem('perfil_morador', JSON.stringify(dadosPerfil));
-    router.push('/dashboard');
+    
+    // Redirecionar para página de novo serviço
+    console.log('Redirecionando para: /dashboard?aba=servicos&novo=true');
+    router.push('/dashboard?aba=servicos&novo=true');
   } else {
+    console.error('Erro ao salvar perfil:', error);
     alert("Erro ao salvar perfil: " + error.message);
   }
 };
@@ -87,30 +90,15 @@ export default function ConfigurarPerfil() {
             <p className="text-[#435334]/50 text-[10px] font-black uppercase tracking-[0.3em] mt-2">Configuração de Identidade</p>
           </header>
 
-          {/* Upload de Foto Estilizado */}
-          <label className="cursor-pointer mb-10 block group relative">
-            <div className="w-32 h-32 rounded-[2.5rem] bg-white mx-auto border-4 border-[#435334]/10 overflow-hidden flex items-center justify-center relative shadow-inner group-hover:scale-105 transition-transform duration-300">
-              {foto ? (
-                <img src={foto} alt="Preview" className="w-full h-full object-cover" />
-              ) : (
-                <div className="text-center text-[#435334]/20 flex flex-col items-center gap-1">
-                  <Camera size={32} />
-                  <span className="text-[8px] font-black uppercase tracking-widest">Adicionar Foto</span>
-                </div>
-              )}
-            </div>
-            <div className="absolute bottom-0 right-1/3 translate-x-4 bg-[#435334] text-white p-2 rounded-xl shadow-lg border-2 border-white">
-              <Camera size={14} />
-            </div>
-            <input type="file" className="hidden" accept="image/*" onChange={(e) => {
-              const arquivo = e.target.files?.[0];
-              if (arquivo) {
-                const reader = new FileReader();
-                reader.onloadend = () => setFoto(reader.result as string);
-                reader.readAsDataURL(arquivo);
-              }
-            }} />
-          </label>
+          {/* Campo de Foto Removido Temporariamente */}
+          <div className="mb-10 p-6 bg-yellow-50 border border-yellow-200 rounded-xl text-center">
+            <Camera size={32} className="text-yellow-600 mx-auto mb-2" />
+            <p className="text-sm text-yellow-800">
+              <strong>Campo de foto desativado temporariamente</strong><br />
+              A tabela perfis não possui coluna foto_url.<br />
+              Complete apenas os campos abaixo.
+            </p>
+          </div>
 
           <form onSubmit={handleSalvar} className="space-y-4">
             <div className="space-y-1">

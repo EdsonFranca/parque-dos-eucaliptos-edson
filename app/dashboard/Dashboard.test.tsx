@@ -5,6 +5,18 @@ import { vi, expect, describe, it } from 'vitest';
 import React from 'react';
 import { render, screen, waitFor } from '@testing-library/react';
 
+const mockQuery = {
+  select: vi.fn().mockReturnThis(),
+  eq: vi.fn().mockReturnThis(),
+  neq: vi.fn().mockReturnThis(),
+  order: vi.fn().mockReturnThis(),
+  limit: vi.fn().mockReturnThis(),
+  single: vi.fn().mockResolvedValue({ data: { id: '123', nome: 'John Doe', tipo_usuario: 'morador' }, error: null }),
+  then: function(resolve: any) {
+    resolve({ data: [], error: null });
+  }
+};
+
 const mockSupabaseInstance = vi.hoisted(() => ({
   auth: {
     getSession: vi.fn(),
@@ -12,19 +24,19 @@ const mockSupabaseInstance = vi.hoisted(() => ({
       data: { subscription: { unsubscribe: vi.fn() } },
     }),
   },
-  from: vi.fn().mockReturnThis(),
-  select: vi.fn().mockReturnThis(),
-  eq: vi.fn().mockReturnThis(),
-  neq: vi.fn().mockReturnThis(),
-  order: vi.fn().mockReturnThis(),
-  limit: vi.fn().mockReturnThis(),
-  single: vi.fn(),
+  from: vi.fn(() => mockQuery),
+  select: vi.fn(() => mockQuery),
+  eq: vi.fn(() => mockQuery),
+  neq: vi.fn(() => mockQuery),
+  order: vi.fn(() => mockQuery),
+  limit: vi.fn(() => mockQuery),
+  single: vi.fn(() => mockQuery.single()),
   channel: vi.fn(() => ({
     on: vi.fn().mockReturnThis(),
     subscribe: vi.fn(),
   })),
   removeChannel: vi.fn(),
-  rpc: vi.fn(),
+  rpc: vi.fn().mockResolvedValue({ data: [], error: null }),
 }));
 
 // 1. Mock do Supabase ANTES de qualquer import
@@ -37,6 +49,7 @@ vi.mock('@supabase/supabase-js', () => {
 const mockPush = vi.fn();
 vi.mock('next/navigation', () => ({
   useRouter: vi.fn(() => ({ push: mockPush, query: {} })),
+  useSearchParams: vi.fn(() => ({ get: vi.fn() })),
 }));
 
 // 2. Mocks dos componentes locais
@@ -62,8 +75,8 @@ describe('Dashboard', () => {
       error: null,
     });
     
-    mockSupabase.single.mockResolvedValue({
-      data: { id: '123', nome: 'John Doe', tipo_usuario: 'morador' },
+    mockQuery.single.mockResolvedValue({
+      data: { id: '123', nome: 'John Doe', tipo_usuario: 'morador', valor: true },
       error: null
     });
 

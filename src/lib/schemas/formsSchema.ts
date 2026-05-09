@@ -180,7 +180,7 @@ export const classificadoFiltroSchema = z.object({
     .refine((val) => val === null || (!isNaN(val) && val >= 0), 'Preço máximo deve ser positivo')
     .optional()
 }).refine((data) => {
-  return data.precoMin === null || data.precoMax === null || data.precoMin <= data.precoMax;
+  return (data.precoMin ?? null) === null || (data.precoMax ?? null) === null || data.precoMin! <= data.precoMax!;
 }, {
   message: 'Preço mínimo deve ser menor ou igual ao preço máximo',
   path: ['precoMax']
