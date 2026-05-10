@@ -1,6 +1,6 @@
 "use client";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import { Search, Calendar, History, Bookmark, Settings, MessageSquare, Lightbulb, Droplets, AlertCircle, Bot, CheckCircle2, LogOut, Megaphone, FileText, Heart } from "lucide-react";
 import { createClient } from '@supabase/supabase-js';
 import FaleComSindicoFloating from '@/components/FaleComSindicoFloating';
@@ -15,7 +15,7 @@ const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 );
 
-export default function Dashboard() {
+function DashboardContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [perfil, setPerfil] = useState<any>(null);
@@ -653,5 +653,13 @@ export default function Dashboard() {
       </aside>
 
     </div>
+  );
+}
+
+export default function Dashboard() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-[#eaf3de] flex items-center justify-center text-[#2c3f1d] font-bold">Carregando painel...</div>}>
+      <DashboardContent />
+    </Suspense>
   );
 }
