@@ -34,32 +34,32 @@ const mockInsert = vi.hoisted(() => vi.fn(() => ({ select: mockInsertSelect })))
 const mockDeleteEq = vi.hoisted(() => vi.fn());
 const mockDelete = vi.hoisted(() => vi.fn(() => ({ eq: mockDeleteEq })));
 
-const classificadosQuery = {
-  select: vi.fn(() => ({
-    order: vi.fn().mockResolvedValue({ data: mockClassificadosData }),
-  })),
+const classificadosMockQuery = {
+  select: vi.fn().mockReturnThis(),
+  eq: vi.fn().mockReturnThis(),
+  neq: vi.fn().mockReturnThis(),
+  order: vi.fn().mockResolvedValue({ data: mockClassificadosData }),
   insert: mockInsert,
   delete: mockDelete,
 };
 
-const chatsQuery = {
-  select: vi.fn(() => ({
-    or: vi.fn().mockResolvedValue({ data: mockChatsData }),
-  })),
+const chatsMockQuery = {
+  select: vi.fn().mockReturnThis(),
+  or: vi.fn().mockResolvedValue({ data: mockChatsData }),
 };
 
-const genericQuery = {
-  select: vi.fn(() => ({
-    eq: vi.fn(() => ({
-      single: vi.fn().mockResolvedValue({ data: null }),
-      order: vi.fn().mockResolvedValue({ data: [] }),
-    })),
-    order: vi.fn().mockResolvedValue({ data: [] }),
-  })),
-  insert: vi.fn(() => ({
-    select: vi.fn().mockResolvedValue({ data: [] }),
-  })),
+const genericMockQuery = {
+  select: vi.fn().mockReturnThis(),
+  eq: vi.fn().mockReturnThis(),
+  neq: vi.fn().mockReturnThis(),
+  order: vi.fn().mockResolvedValue({ data: [] }),
+  single: vi.fn().mockResolvedValue({ data: null }),
+  insert: vi.fn().mockReturnThis(),
 };
+
+const classificadosQuery = classificadosMockQuery;
+const chatsQuery = chatsMockQuery;
+const genericQuery = genericMockQuery;
 
 const mockFrom = vi.hoisted(() => vi.fn((table: string) => {
   if (table === 'classificados') return classificadosQuery;
@@ -98,6 +98,24 @@ describe('ClassificadosView', () => {
     mockDeleteEq.mockResolvedValue({ error: null });
     vi.stubGlobal('alert', vi.fn());
     vi.stubGlobal('confirm', vi.fn(() => true));
+    vi.stubGlobal('fetch', vi.fn(async () => {
+      return {
+        ok: true,
+        json: async () => ({
+          data: {
+            id: 'novo-1',
+            vendedor_id: perfil.id,
+            vendedor_nome: perfil.nome,
+            titulo: 'Mesa de Jantar',
+            descricao: '6 lugares, madeira maciça.',
+            preco: 900,
+            imagem_url: 'data:image/png;base64,abc123',
+            status: 'ativo',
+            created_at: new Date().toISOString()
+          }
+        }),
+      };
+    }));
   });
 
   it('lista anúncios carregados da vitrine', async () => {
@@ -130,7 +148,7 @@ describe('ClassificadosView', () => {
       screen.getByPlaceholderText('Descreva as condições, tempo de uso, motivo da venda...'),
       { target: { value: '6 lugares, madeira maciça.' } },
     );
-    fireEvent.change(screen.getByPlaceholderText('0.00'), {
+    fireEvent.change(screen.getByPlaceholderText('0,00'), {
       target: { value: '900' },
     });
 
@@ -140,7 +158,7 @@ describe('ClassificadosView', () => {
     fireEvent.click(screen.getByRole('button', { name: /publicar oferta/i }));
 
     await waitFor(() => {
-      expect(mockInsert).toHaveBeenCalled();
+      expect(global.fetch).toHaveBeenCalled();
       expect(screen.getByText('Mesa de Jantar')).toBeInTheDocument();
     });
   });

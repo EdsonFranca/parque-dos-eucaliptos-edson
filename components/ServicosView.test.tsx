@@ -59,6 +59,31 @@ describe('ServicosView', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.stubGlobal('alert', vi.fn());
+    let servicosList = [...mockServicosData];
+
+    vi.stubGlobal('fetch', vi.fn(async (url: any, options: any) => {
+      if (options && options.method === 'POST') {
+        const newItem = {
+          id: 'srv-new',
+          titulo: 'Eletricista Residencial',
+          descricao: 'Instalações e manutenções elétricas.',
+          contato: '(11) 98888-7777',
+          prestador_id: perfil.id,
+          prestador_nome: perfil.nome,
+        };
+        servicosList = [newItem, ...servicosList];
+        return {
+          ok: true,
+          json: async () => ({
+            data: [newItem]
+          }),
+        };
+      }
+      return {
+        ok: true,
+        json: async () => ({ data: servicosList }),
+      };
+    }));
     mockInsertSelect.mockResolvedValue({
       error: null,
       data: [{
@@ -95,14 +120,14 @@ describe('ServicosView', () => {
     render(<ServicosView perfil={perfil} />);
 
     fireEvent.click(screen.getByRole('button', { name: /publicar servico/i }));
-    fireEvent.change(screen.getByPlaceholderText('Titulo do servico'), {
+    fireEvent.change(screen.getByPlaceholderText('Ex: Serviços de Jardinagem'), {
       target: { value: 'Eletricista Residencial' },
     });
-    fireEvent.change(screen.getByPlaceholderText('Contato (telefone/email)'), {
+    fireEvent.change(screen.getByPlaceholderText('(11) 98765-4321'), {
       target: { value: '(11) 98888-7777' },
     });
     fireEvent.change(
-      screen.getByPlaceholderText('Detalhe o servico, disponibilidade e experiencia...'),
+      screen.getByPlaceholderText('Descreva detalhadamente o serviço oferecido, incluindo experiência, materiais, etc...'),
       { target: { value: 'Instalações e manutenções elétricas.' } },
     );
     const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
@@ -110,10 +135,10 @@ describe('ServicosView', () => {
       target: { files: [new File(['abc'], 'servico.png', { type: 'image/png' })] },
     });
 
-    fireEvent.click(screen.getByRole('button', { name: /^publicar$/i }));
+    fireEvent.click(screen.getAllByRole('button', { name: /publicar serviço/i })[1] || screen.getByRole('button', { name: /publicar serviço/i }));
 
     await waitFor(() => {
-      expect(mockInsert).toHaveBeenCalled();
+      expect(global.fetch).toHaveBeenCalled();
       expect(screen.getByText('Eletricista Residencial')).toBeInTheDocument();
     });
   });

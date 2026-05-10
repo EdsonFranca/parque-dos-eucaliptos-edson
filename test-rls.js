@@ -11,7 +11,26 @@ const supabaseAdmin = createClient(
 );
 
 async function test() {
-  const { data } = await supabaseAdmin.from('perfis_moradores').select('*').limit(1);
-  console.log("Perfis:", data);
+  console.log('Buscando mensagens...')
+  const { data: msgs } = await supabaseAdmin.from('mensagens_chats').select('id');
+  if (msgs && msgs.length > 0) {
+     const ids = msgs.map(m => m.id);
+     const { error } = await supabaseAdmin.from('mensagens_chats').delete().in('id', ids);
+     console.log('Mensagens apagadas:', ids.length, error || 'Sem erros');
+  } else {
+     console.log('Nenhuma mensagem na base.');
+  }
+  
+  console.log('Buscando caixas de chat...')
+  const { data: chats } = await supabaseAdmin.from('chats_classificados').select('id');
+  if (chats && chats.length > 0) {
+     const cIds = chats.map(c => c.id);
+     const { error } = await supabaseAdmin.from('chats_classificados').delete().in('id', cIds);
+     console.log('Chats apagados:', cIds.length, error || 'Sem erros');
+  } else {
+     console.log('Nenhum chat na base.');
+  }
+  
+  console.log('Limpador concluído com sucesso!');
 }
 test();

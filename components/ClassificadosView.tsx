@@ -1,14 +1,15 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
-import { Camera, Search, Loader2, MessageSquare, Plus, Trash2, X, Send, Inbox, Bell } from 'lucide-react';
+import { Camera, Search, Loader2, MessageSquare, Plus, Trash2, X, Send, Inbox, Bell, ArrowLeft, Archive, RefreshCw } from 'lucide-react';
 
 export default function ClassificadosView({ perfil }: { perfil: any }) {
-  const [abaLocal, setAbaLocal] = useState<'vitrine' | 'inbox'>('vitrine');
+  const [abaLocal, setAbaLocal] = useState<'vitrine' | 'inbox' | 'historico'>('vitrine');
   const [anuncios, setAnuncios] = useState<any[]>([]);
   const [carregando, setCarregando] = useState(true);
   
   // Inbox data
   const [meusChatsLista, setMeusChatsLista] = useState<any[]>([]);
+  const [meusInativos, setMeusInativos] = useState<any[]>([]);
   const mensagensFimRef = useRef<HTMLDivElement>(null);
 
   const [mostrandoForm, setMostrandoForm] = useState(false);
@@ -32,6 +33,7 @@ export default function ClassificadosView({ perfil }: { perfil: any }) {
     const { data } = await supabase
       .from('classificados')
       .select('*')
+      .neq('status', 'inativo') // Esconde inativos/excluidos da vitrine geral
       .order('created_at', { ascending: false });
     
     if (data) {
@@ -40,12 +42,25 @@ export default function ClassificadosView({ perfil }: { perfil: any }) {
     setCarregando(false);
   };
 
+  const fetchMeusInativos = async () => {
+    const { data } = await supabase
+      .from('classificados')
+      .select('*')
+      .eq('vendedor_id', perfil.id)
+      .eq('status', 'inativo')
+      .order('created_at', { ascending: false });
+    
+    if (data) {
+      setMeusInativos(data);
+    }
+  };
+
   const fetchMeusChatsBase = async () => {
     const { data } = await supabase
       .from('chats_classificados')
       .select(`
         *,
-        classificados (titulo, imagem_url, preco)
+        classificados (titulo, imagem_url, preco, vendedor_nome)
       `)
       .or(`interessado_id.eq.${perfil.id},vendedor_id.eq.${perfil.id}`);
     
@@ -57,7 +72,23 @@ export default function ClassificadosView({ perfil }: { perfil: any }) {
   useEffect(() => {
     fetchAnuncios();
     fetchMeusChatsBase();
-  }, []);
+    fetchMeusInativos();
+
+    if (!perfil?.id) return;
+
+    // Real-time updates for Inbox
+    const inboxSubscription = supabase.channel('inbox_updates')
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'chats_classificados' }, payload => {
+         if (payload.new.vendedor_id === perfil.id || payload.new.interessado_id === perfil.id) {
+           fetchMeusChatsBase();
+         }
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(inboxSubscription);
+    };
+  }, [perfil?.id]);
 
   useEffect(() => {
     if (chatAtivo) {
@@ -74,48 +105,80 @@ export default function ClassificadosView({ perfil }: { perfil: any }) {
     }
   };
 
+  const handlePrecoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    let val = e.target.value.replace(/\D/g, '');
+    if (!val) { setNovoPreco(''); return; }
+    val = (Number(val) / 100).toFixed(2).replace('.', ',');
+    val = val.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+    setNovoPreco(val);
+  };
+
   const handlePublicar = async () => {
     if (!novoTitulo || !novaDescricao || !novoPreco || !novaImagem) {
       return alert("Preencha todos os campos e adicione uma foto!");
     }
     setSalvando(true);
 
-    const precoNumerico = Number(novoPreco.replace(',', '.'));
+    const precoClean = novoPreco.replace(/\./g, '').replace(',', '.');
+    const precoNumerico = Number(precoClean);
     if (isNaN(precoNumerico)) {
       setSalvando(false);
       return alert("Preço inválido.");
     }
 
-    const { error, data } = await supabase
-      .from('classificados')
-      .insert([{
+    const response = await fetch('/api/classificados', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
         vendedor_id: perfil.id,
         vendedor_nome: perfil.nome,
         titulo: novoTitulo,
         descricao: novaDescricao,
         preco: precoNumerico,
         imagem_url: novaImagem
-      }]).select();
+      })
+    });
 
-    if (!error && data) {
-      setAnuncios(prev => [data[0], ...prev]);
+    if (response.ok) {
+      const { data } = await response.json();
+      setAnuncios(prev => [data, ...prev]);
       setMostrandoForm(false);
       setNovoTitulo(''); setNovaDescricao(''); setNovoPreco(''); setNovaImagem(null);
       alert("✅ Anúncio publicado com sucesso!");
     } else {
-      console.error(error);
+      const errorData = await response.json();
+      console.error(errorData);
       alert("Erro ao publicar anúncio.");
     }
     setSalvando(false);
   };
 
-  const handleDeletar = async (id: string) => {
-    if (!confirm("Tem certeza que deseja apagar seu anúncio?")) return;
-    const { error } = await supabase.from('classificados').delete().eq('id', id);
-    if (!error) {
-      setAnuncios(prev => prev.filter(anuncio => anuncio.id !== id));
+  const handleDeletar = async (id: string, reativar: boolean = false) => {
+    const msg = reativar ? "Deseja repostar este anúncio na vitrine geral?" : "Tem certeza que deseja marcar este anúncio como vendido/excluído? Ele ficará no seu Histórico.";
+    if (!confirm(msg)) return;
+    
+    const novoStatus = reativar ? 'ativo' : 'inativo';
+    
+    const response = await fetch('/api/classificados', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id, novoStatus })
+    });
+    
+    if (response.ok) {
+      if (reativar) {
+         setMeusInativos(prev => prev.filter(anuncio => anuncio.id !== id));
+         fetchAnuncios();
+         setAbaLocal('vitrine');
+      } else {
+         setAnuncios(prev => prev.filter(anuncio => anuncio.id !== id));
+         fetchMeusInativos();
+         fetchMeusChatsBase(); // Atualiza a lista de conversas ativas (inbox) removendo chats natos de itens excluidos
+      }
     } else {
-      alert("Erro ao apagar anúncio.");
+      const errorData = await response.json();
+      console.error("Erro no Soft Delete:", errorData);
+      alert("Erro ao alterar o anúncio: " + errorData.error);
     }
   };
 
@@ -252,14 +315,14 @@ export default function ClassificadosView({ perfil }: { perfil: any }) {
   });
 
   return (
-    <main className="flex-1 px-10 pb-10 pt-4 overflow-y-auto animate-in fade-in slide-in-from-bottom-8 duration-700">
+    <main className="flex-1 px-4 md:px-10 pb-10 pt-4 overflow-y-auto animate-in fade-in slide-in-from-bottom-8 duration-700">
       
       <div className="flex flex-col md:flex-row justify-between items-center mb-10 gap-4">
         <div>
            <h2 className="text-3xl font-black text-[#1d2a13] uppercase tracking-tight flex items-center gap-3">Compra e Venda <span className="text-2xl">🛒</span></h2>
            <p className="text-xs font-bold text-[#4a5937]/70 uppercase tracking-widest mt-1">Classificados Exclusivos para Moradores</p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-2 pb-2 overflow-x-auto w-full md:w-auto">
           {!mostrandoForm && (
             <button 
                onClick={() => setMostrandoForm(true)}
@@ -274,6 +337,13 @@ export default function ClassificadosView({ perfil }: { perfil: any }) {
           >
              {abaLocal === 'inbox' ? <Search size={16} /> : <Bell size={16} />}
              {abaLocal === 'inbox' ? 'Ver Vitrine' : `Mensagens (${meusChatsLista.length})`}
+          </button>
+          <button 
+             onClick={() => setAbaLocal(abaLocal === 'historico' ? 'vitrine' : 'historico')}
+             className={`px-5 py-3 rounded-full font-bold shadow-md flex items-center gap-2 transition-colors uppercase text-xs tracking-widest shrink-0 ${abaLocal === 'historico' ? 'bg-[#4a5937] text-white' : 'bg-white text-[#4a5937] border border-[#e4eed7] hover:bg-[#e4eed7]'}`}
+          >
+             {abaLocal === 'historico' ? <Search size={16} /> : <Archive size={16} />}
+             Histórico
           </button>
         </div>
       </div>
@@ -304,10 +374,10 @@ export default function ClassificadosView({ perfil }: { perfil: any }) {
                 <span className="absolute left-5 top-1/2 -translate-y-1/2 font-black text-[#2c3f1d]/50">R$</span>
                 <input 
                   type="text" 
-                  placeholder="0.00" 
+                  placeholder="0,00" 
                   className="w-full bg-[#f4f7ef] border-transparent rounded-[1.5rem] pl-12 pr-5 py-4 mb-4 font-bold outline-none focus:ring-2 focus:ring-[#4a5937]/20 shadow-inner text-sm" 
                   value={novoPreco} 
-                  onChange={(e) => setNovoPreco(e.target.value)} 
+                  onChange={handlePrecoChange} 
                 />
               </div>
             </div>
@@ -395,7 +465,7 @@ export default function ClassificadosView({ perfil }: { perfil: any }) {
                  
                  <div className="p-6 flex-1 flex flex-col">
                     <h3 className="font-bold text-lg text-[#1d2a13] line-clamp-1 mb-1">{anuncio.titulo}</h3>
-                    <p className="text-[10px] font-bold text-[#4a5937]/60 uppercase tracking-widest mb-3">Por: {anuncio.vendedor_nome || 'Morador'}</p>
+                    <p className="text-[10px] font-bold text-[#4a5937]/60 uppercase tracking-widest mb-3">Por: {anuncio.vendedor_nome || 'Morador'} • {new Date(anuncio.created_at).toLocaleDateString('pt-BR')}</p>
                     <p className="text-sm text-[#2c3f1d]/70 line-clamp-3 mb-5 flex-1">{anuncio.descricao}</p>
                     
                     {perfil.id === anuncio.vendedor_id ? (
@@ -414,7 +484,7 @@ export default function ClassificadosView({ perfil }: { perfil: any }) {
             )}
           </>
         )
-      ) : (
+      ) : abaLocal === 'inbox' ? (
         <section className="bg-white p-8 rounded-[2rem] shadow-sm border border-[#e4eed7]">
           <h3 className="text-xl font-bold text-[#1d2a13] mb-6 flex items-center gap-2"><Inbox size={20}/> Suas Conversas ({meusChatsLista.length})</h3>
           
@@ -444,11 +514,55 @@ export default function ClassificadosView({ perfil }: { perfil: any }) {
                               {isVendedor ? 'Você Vende' : 'Você Compra'}
                            </span>
                          </div>
-                         <p className="text-xs text-[#2c3f1d]/60 flex items-center gap-1"><MessageSquare size={12}/> Clique para abrir o bate-papo</p>
+                         <p className="text-xs text-[#2c3f1d]/80 mb-2">
+                           <span className="font-semibold">Vendedor(a):</span> {chat.classificados?.vendedor_nome || 'Desconhecido'}
+                         </p>
+                         <p className="text-[10px] text-[#4a5937]/80 flex items-center gap-1 font-bold tracking-widest uppercase">
+                           <MessageSquare size={12}/> Clique para abrir o bate-papo
+                         </p>
                       </div>
                    </div>
                  )
                })}
+            </div>
+          )}
+        </section>
+      ) : (
+        <section className="bg-white p-8 rounded-[2rem] shadow-sm border border-[#e4eed7]">
+          <h3 className="text-xl font-bold text-[#1d2a13] mb-6 flex items-center gap-2"><Archive size={20}/> Histórico de Anúncios Vendidos / Excluídos ({meusInativos.length})</h3>
+          <p className="text-sm text-[#4a5937]/70 mb-6">Aqui ficam guardados todos os seus anúncios finalizados. Eles não aparecem na Vitrine da Comunidade, mas você os mantêm para memória.</p>
+          
+          {meusInativos.length === 0 ? (
+             <p className="text-[#2c3f1d]/50 italic">Nenhum anúncio foi arquivado no seu histórico ainda.</p>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                {meusInativos.map(anuncio => (
+              <div key={anuncio.id} className="bg-[#f8faf5] rounded-[2rem] overflow-hidden opacity-70 hover:opacity-100 transition-opacity border border-[#e4eed7] group flex flex-col grayscale hover:grayscale-0">
+                 <div className="h-40 overflow-hidden relative">
+                   {anuncio.imagem_url ? (
+                     <img src={anuncio.imagem_url} alt={anuncio.titulo} className="w-full h-full object-cover" />
+                   ) : (
+                     <div className="w-full h-full bg-slate-200 flex justify-center items-center"><Camera className="text-slate-400" /></div>
+                   )}
+                   <div className="absolute top-4 right-4 bg-[#1d2a13] px-3 py-1 text-[10px] uppercase font-black tracking-widest rounded-full text-white">
+                      INATIVO
+                   </div>
+                 </div>
+                 
+                 <div className="p-5 flex-1 flex flex-col">
+                    <h3 className="font-bold text-lg text-[#1d2a13] line-clamp-1 mb-1">{anuncio.titulo}</h3>
+                    <div className="flex justify-between items-center mb-3">
+                      <p className="text-[10px] font-bold text-[#4a5937] uppercase tracking-widest">R$ {Number(anuncio.preco).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
+                      <p className="text-[10px] font-bold text-[#4a5937]/60 uppercase tracking-widest">{new Date(anuncio.created_at).toLocaleDateString('pt-BR')}</p>
+                    </div>
+                    <p className="text-xs text-[#2c3f1d]/70 line-clamp-2 mb-4 flex-1">{anuncio.descricao}</p>
+                    
+                    <button onClick={() => handleDeletar(anuncio.id, true)} className="w-full bg-[#4a5937] hover:bg-[#323d24] text-white font-bold py-3 text-xs uppercase tracking-widest rounded-full flex justify-center items-center gap-2 transition-colors">
+                      <RefreshCw size={14} /> Reativar Anúncio
+                    </button>
+                 </div>
+              </div>
+                ))}
             </div>
           )}
         </section>
@@ -461,10 +575,16 @@ export default function ClassificadosView({ perfil }: { perfil: any }) {
              
              {/* Chat Header */}
              <div className="bg-[#1d2a13] text-white p-6 shrink-0 rounded-bl-[2.5rem]">
-               <div className="flex justify-between items-center mb-2">
-                 <h3 className="font-black text-lg break-words">{chatAtivo.anuncio.titulo}</h3>
-                 <button onClick={fecharChat} className="bg-white/10 hover:bg-red-500/80 p-2 rounded-full transition-colors"><X size={16} /></button>
+               <div className="flex justify-between items-center mb-4">
+                 <button 
+                   onClick={fecharChat} 
+                   className="flex items-center gap-2 bg-white/10 hover:bg-white/20 text-white font-bold py-2 px-4 rounded-full transition-colors text-sm uppercase tracking-widest shadow-inner border border-white/5"
+                 >
+                   <ArrowLeft size={16} /> Voltar
+                 </button>
+                 <X size={16} className="text-white/30 cursor-pointer hover:text-white transition-colors" onClick={fecharChat} />
                </div>
+               <h3 className="font-black text-lg break-words leading-tight">{chatAtivo.anuncio.titulo}</h3>
                <p className="text-[10px] text-white/60 uppercase tracking-widest font-bold">
                  Você é o: {chatAtivo.role === 'vendedor' ? 'Vendedor' : 'Comprador'}
                </p>

@@ -1,6 +1,6 @@
 "use client";
-import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useEffect, useState, Suspense } from "react";
 import { Search, Calendar, History, Bookmark, Settings, MessageSquare, Lightbulb, Droplets, AlertCircle, Bot, CheckCircle2, LogOut, Megaphone, FileText, Heart } from "lucide-react";
 import { createClient } from '@supabase/supabase-js';
 import FaleComSindicoFloating from '@/components/FaleComSindicoFloating';
@@ -15,8 +15,9 @@ const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 );
 
-export default function Dashboard() {
+function DashboardContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [perfil, setPerfil] = useState<any>(null);
   const [pergunta, setPergunta] = useState('');
   const [resposta, setResposta] = useState('');
@@ -38,8 +39,8 @@ export default function Dashboard() {
     }
 
     const { data: perfilData } = await supabase
-      .from('perfis_moradores')
-      .select('*')
+      .from('perfis')
+      .select('id, nome, email')
       .eq('id', session.user.id)
       .single();
       
@@ -162,6 +163,14 @@ export default function Dashboard() {
   useEffect(() => {
     fetchData();
     
+    // Verificar se há parâmetro de aba na URL
+    const abaParam = searchParams.get('aba');
+    console.log('Dashboard - abaParam detectado:', abaParam);
+    if (abaParam && ['dashboard', 'comercio', 'servicos', 'transparencia', 'agenda'].includes(abaParam)) {
+      console.log('Dashboard - Mudando aba para:', abaParam);
+      setAbaAtiva(abaParam);
+    }
+    
     // Configurar Realtime para atualizações instantâneas das obras
     const obrasSubscription = supabase
       .channel('obras_changes')
@@ -227,20 +236,16 @@ export default function Dashboard() {
       const { data: obrasAtualizadas } = await supabase
         .from('obras')
         .select('id, likes, updated_at')
-        .gte('updated_at', dezSegundosAtras)
-        .order('updated_at', { ascending: false });
+        .gte('updated_at', dezSegundosAtras);
 
       if (obrasAtualizadas && obrasAtualizadas.length > 0) {
-        console.log('Atualizando', obrasAtualizadas.length, 'obras');
+        console.log('Obras atualizadas:', obrasAtualizadas.length);
         setObras(prev => {
           const novasObras = [...prev];
           obrasAtualizadas.forEach(obraAtualizada => {
             const index = novasObras.findIndex(o => o.id === obraAtualizada.id);
             if (index !== -1) {
-              // Garantir que likes seja sempre um array
-              const likesNormalizados = obraAtualizada.likes ? 
-                (Array.isArray(obraAtualizada.likes) ? obraAtualizada.likes : []) : [];
-              novasObras[index] = { ...novasObras[index], ...obraAtualizada, likes: likesNormalizados };
+              novasObras[index] = { ...novasObras[index], ...obraAtualizada };
             }
           });
           return novasObras;
@@ -253,15 +258,16 @@ export default function Dashboard() {
       supabase.removeChannel(obrasSubscription);
       supabase.removeChannel(configSubscription);
     };
-  }, [router]);
+  }, [router, searchParams]);
 
   useEffect(() => {
     if (abaAtiva === 'comercio' && !isComercioAtivo) {
       setAbaAtiva('dashboard');
     }
-    if (abaAtiva === 'servicos' && !isServicosAtivo) {
-      setAbaAtiva('dashboard');
-    }
+    // Removido bloqueio de serviços para permitir teste
+    // if (abaAtiva === 'servicos' && !isServicosAtivo) {
+    //   setAbaAtiva('dashboard');
+    // }
   }, [abaAtiva, isComercioAtivo, isServicosAtivo]);
 
   const perguntarZelador = async () => {
@@ -327,7 +333,7 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="flex min-h-screen bg-[#eaf3de] text-[#2c3f1d] font-sans overflow-auto">
+    <div className="flex flex-col lg:flex-row min-h-screen bg-[#eaf3de] text-[#2c3f1d] font-sans overflow-auto">
       <FaleComSindicoFloating />
       
       {/* 75% LEFT DASHBOARD */}
@@ -343,7 +349,7 @@ export default function Dashboard() {
 
         {/* Dashboard Main Content */}
         {abaAtiva === 'dashboard' ? (
-        <main className="flex-1 px-10 pb-10 space-y-10">
+        <main className="flex-1 px-4 md:px-10 pb-10 space-y-10">
           
           {/* HERO (Mantendo as boas-vindas originais ajustadas) */}
           <section className="relative h-[320px] rounded-[2.5rem] overflow-hidden shadow-2xl">
@@ -547,14 +553,14 @@ export default function Dashboard() {
         </main>
         ) : abaAtiva === 'comercio' && isComercioAtivo ? (
           <ClassificadosView perfil={perfil} />
-        ) : abaAtiva === 'servicos' && isServicosAtivo ? (
+        ) : abaAtiva === 'servicos' ? (
           <ServicosView perfil={perfil} />
         ) : abaAtiva === 'transparencia' ? (
           <TransparenciaView />
         ) : abaAtiva === 'agenda' ? (
           <AgendaView />
         ) : (
-          <main className="flex-1 px-10 pb-10 pt-4 overflow-y-auto">
+          <main className="flex-1 px-4 md:px-10 pb-10 pt-4 overflow-y-auto">
             <div className="bg-white rounded-[2.5rem] shadow-xl p-10 md:p-16 max-w-5xl mx-auto custom-scrollbar animate-in fade-in slide-in-from-bottom-8 duration-700">
                <div className="flex items-center gap-4 mb-10 pb-8 border-b border-[#2c3f1d]/10">
                  <div className="bg-[#e4eed7] p-4 rounded-2xl text-[#4a5937]"><FileText size={32} /></div>
@@ -573,7 +579,7 @@ export default function Dashboard() {
       </div>
 
       {/* 25% RIGHT SIDEBAR (Digital Janitor) */}
-      <aside className="w-[320px] lg:w-[360px] shrink-0 bg-[#eaf4dd] h-full flex flex-col p-8 pb-28 border-l border-white overflow-y-auto">
+      <aside className="w-full lg:w-[320px] xl:w-[360px] shrink-0 bg-[#eaf4dd] h-full flex flex-col p-6 md:p-8 pb-28 border-t lg:border-t-0 lg:border-l border-white overflow-y-auto">
         
         {/* Profile */}
         <div className="flex items-center gap-4 mb-8">
@@ -647,5 +653,13 @@ export default function Dashboard() {
       </aside>
 
     </div>
+  );
+}
+
+export default function Dashboard() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-[#eaf3de] flex items-center justify-center text-[#2c3f1d] font-bold">Carregando painel...</div>}>
+      <DashboardContent />
+    </Suspense>
   );
 }

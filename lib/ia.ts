@@ -8,8 +8,8 @@ export async function getExtractor() {
 
     const { pipeline, env } = await import('@xenova/transformers');
 
-    env.allowLocalModels = false;
-    env.useBrowserCache = true;
+    (env as any).allowLocalModels = false;
+    (env as any).useBrowserCache = true;
 
     return await pipeline('feature-extraction', 'Xenova/all-MiniLM-L6-v2');
 }

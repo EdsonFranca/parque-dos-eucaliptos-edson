@@ -1,0 +1,5 @@
+{
+  "error": "Erro ao criar serviço",
+  "details": "null value in column \"foto_url\" of relation \"servicos\" violates not-null constraint",
+  "code": "23502"
+}

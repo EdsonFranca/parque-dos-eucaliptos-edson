@@ -1,0 +1,6 @@
+﻿components/AgendaView.test.tsx(20,46): error TS2322: Type '{ perfil: { id: string; nome: string; }; }' is not assignable to type 'IntrinsicAttributes'.
+  Property 'perfil' does not exist on type 'IntrinsicAttributes'.
+components/TransparenciaView.test.tsx(19,53): error TS2322: Type '{ isAdmin: boolean; onVoltar: Mock<Procedure>; }' is not assignable to type 'IntrinsicAttributes'.
+  Property 'isAdmin' does not exist on type 'IntrinsicAttributes'.
+components/ZeladorDigital.test.tsx(11,50): error TS2322: Type '{ onLimpar: Mock<Procedure>; perfil: { id: string; }; }' is not assignable to type 'IntrinsicAttributes'.
+  Property 'onLimpar' does not exist on type 'IntrinsicAttributes'.
